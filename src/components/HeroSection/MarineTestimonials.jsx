@@ -9,18 +9,6 @@ import { Quote, ExternalLink, Star, Waves } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Floating background elements
-function TestimonialsFloatingElements() {
-  return (
-    <div className="absolute inset-0 overflow-hidden opacity-10">
-      <div className="testimonials-float testimonials-float-1"></div>
-      <div className="testimonials-float testimonials-float-2"></div>
-      <div className="testimonials-float testimonials-float-3"></div>
-      <div className="testimonials-float testimonials-float-4"></div>
-    </div>
-  );
-}
-
 const marineResearchTestimonials = [
   {
     author: {
@@ -99,122 +87,63 @@ const marineResearchTestimonials = [
 ];
 
 const TestimonialCard = ({ testimonial, index }) => {
-  const CardWrapper = testimonial.href ? motion.a : motion.div;
-
   return (
-    <CardWrapper
-      href={testimonial.href}
-      target={testimonial.href ? "_blank" : undefined}
-      rel={testimonial.href ? "noopener noreferrer" : undefined}
-      className="relative mx-4 w-80 flex-shrink-0 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/90 backdrop-blur-xl p-6 shadow-2xl transition-all duration-500 hover:shadow-cyan-500/20 hover:scale-[1.03] border border-cyan-500/20 hover:border-cyan-400/40 group overflow-hidden"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      whileHover={{ y: -5 }}
-    >
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-      {/* Animated border sweep */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-
+    <div className="bg-slate-800/90 backdrop-blur-xl p-6 rounded-2xl border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-cyan-500/10">
       {/* Quote icon */}
-      <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-        <Quote className="w-8 h-8 text-cyan-400" />
+      <div className="flex justify-end mb-4">
+        <Quote className="w-8 h-8 text-cyan-400/30 group-hover:text-cyan-400/60 transition-colors duration-300" />
       </div>
 
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-14 w-14 ring-2 ring-cyan-400/30 group-hover:ring-cyan-400/60 transition-all duration-300">
-              <AvatarImage
-                src={testimonial.author.avatar}
-                alt={testimonial.author.name}
-              />
-              <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold text-lg">
-                {testimonial.author.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-bold text-cyan-100 group-hover:text-white transition-colors duration-300">
-                  {testimonial.author.name}
-                </h4>
-                {testimonial.href && (
-                  <ExternalLink className="w-4 h-4 text-cyan-400/60 group-hover:text-cyan-400 transition-colors duration-300" />
-                )}
-              </div>
-              <p className="text-sm text-cyan-300/80 font-medium">
-                {testimonial.author.title}
-              </p>
-              <p className="text-xs text-cyan-400/60 mb-2">
-                {testimonial.author.institution}
-              </p>
-              <p className="text-xs text-cyan-500/80">
-                {testimonial.author.handle}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-4">
-          {[...Array(testimonial.rating)].map((_, i) => (
-            <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-          ))}
-        </div>
-
-        {/* Testimonial text */}
-        <blockquote className="text-cyan-100/90 leading-relaxed mb-4 group-hover:text-white transition-colors duration-300">
-          "{testimonial.text}"
-        </blockquote>
-
-        {/* Impact badge */}
-        <div className="flex items-center justify-between">
-          <Badge className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50 transition-colors duration-300">
-            {testimonial.impact}
-          </Badge>
-          <Waves className="w-5 h-5 text-cyan-400/40 group-hover:text-cyan-400/60 transition-colors duration-300" />
-        </div>
-      </div>
-    </CardWrapper>
-  );
-};
-
-const EnhancedMarqueeRow = ({ testimonials, reverse = false, speed = 50 }) => {
-  const duplicatedTestimonials = [...testimonials, ...testimonials];
-
-  return (
-    <div className="relative flex overflow-hidden">
-      <motion.div
-        className="flex gap-6"
-        animate={{
-          x: reverse
-            ? [0, -100 * testimonials.length]
-            : [-100 * testimonials.length, 0],
-        }}
-        transition={{
-          x: {
-            repeat: Infinity,
-            repeatType: "loop",
-            duration: speed,
-            ease: "linear",
-          },
-        }}
-      >
-        {duplicatedTestimonials.map((testimonial, index) => (
-          <TestimonialCard
-            key={`${testimonial.author.name}-${index}`}
-            testimonial={testimonial}
-            index={index}
+      {/* Header */}
+      <div className="flex items-center space-x-3 mb-4">
+        <Avatar className="h-12 w-12 ring-2 ring-cyan-400/30">
+          <AvatarImage
+            src={testimonial.author.avatar}
+            alt={testimonial.author.name}
           />
+          <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold">
+            {testimonial.author.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-bold text-white">{testimonial.author.name}</h4>
+            {testimonial.href && (
+              <ExternalLink className="w-4 h-4 text-cyan-400/60" />
+            )}
+          </div>
+          <p className="text-sm text-slate-300 font-medium">
+            {testimonial.author.title}
+          </p>
+          <p className="text-xs text-slate-400">
+            {testimonial.author.institution}
+          </p>
+        </div>
+      </div>
+
+      {/* Rating */}
+      <div className="flex items-center gap-1 mb-4">
+        {[...Array(testimonial.rating)].map((_, i) => (
+          <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
         ))}
-      </motion.div>
+      </div>
+
+      {/* Testimonial text */}
+      <blockquote className="text-slate-200 leading-relaxed mb-4">
+        "{testimonial.text}"
+      </blockquote>
+
+      {/* Impact badge */}
+      <div className="flex items-center justify-between">
+        <Badge className="bg-slate-700/60 text-cyan-300 border-cyan-500/30">
+          {testimonial.impact}
+        </Badge>
+        <Waves className="w-5 h-5 text-cyan-400/40" />
+      </div>
     </div>
   );
 };
@@ -222,23 +151,20 @@ const EnhancedMarqueeRow = ({ testimonials, reverse = false, speed = 50 }) => {
 const MarineTestimonials = () => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
+  const cardsRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-
-  const firstRow = marineResearchTestimonials.slice(0, 3);
-  const secondRow = marineResearchTestimonials.slice(3, 6);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Title animation
       gsap.fromTo(
         titleRef.current,
-        { y: 60, opacity: 0, scale: 0.9 },
+        { y: 50, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          scale: 1,
           duration: 1,
-          ease: "power3.out",
+          ease: "power2.out",
           scrollTrigger: {
             trigger: titleRef.current,
             start: "top 80%",
@@ -247,16 +173,23 @@ const MarineTestimonials = () => {
         }
       );
 
-      // Floating elements animation
-      gsap.to(".testimonials-float", {
-        y: "+=30",
-        rotation: "+=180",
-        duration: 15,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        stagger: 4,
-      });
+      // Cards animation
+      gsap.fromTo(
+        ".testimonial-card",
+        { y: 60, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.15,
+          scrollTrigger: {
+            trigger: cardsRef.current,
+            start: "top 70%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -265,107 +198,80 @@ const MarineTestimonials = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative py-32 overflow-hidden bg-gradient-to-b from-slate-950 via-blue-950/30 to-cyan-950/20"
+      className="relative w-full py-24 px-4 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden"
     >
-      {/* Floating background elements */}
-      <TestimonialsFloatingElements />
+      {/* Simple background elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute w-40 h-40 rounded-full bg-gradient-to-br from-cyan-400/20 to-blue-500/10 top-20 left-10 animate-pulse"></div>
+        <div
+          className="absolute w-32 h-32 rounded-full bg-gradient-to-br from-blue-400/15 to-cyan-500/8 bottom-20 right-20 animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
 
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-blue-900/5"></div>
-
-      <div className="container mx-auto px-4 mb-16">
-        <motion.div
-          ref={titleRef}
-          className="text-center max-w-5xl mx-auto"
-          initial={{ opacity: 0, y: 50 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.div
-            className="inline-flex items-center gap-2 bg-cyan-600/20 backdrop-blur-sm px-4 py-2 rounded-full border border-cyan-400/30 mb-8"
-            initial={{ scale: 0 }}
-            animate={isInView ? { scale: 1 } : { scale: 0 }}
-            transition={{ delay: 0.3, type: "spring" }}
-          >
-            <Star className="w-4 h-4 text-cyan-400" />
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Header */}
+        <div ref={titleRef} className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-slate-800/60 backdrop-blur-sm px-6 py-3 rounded-full border border-cyan-500/30 mb-8">
+            <Star className="w-5 h-5 text-cyan-400" />
             <span className="text-cyan-300 text-sm font-medium">
               Researcher Testimonials
             </span>
-          </motion.div>
+          </div>
 
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8">
-            <span className="text-cyan-100">Trusted by </span>
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
+            <span className="text-white">Trusted by </span>
+            <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
               Leading Marine
             </span>
             <br />
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
               Researchers
             </span>
-            <span className="text-cyan-100"> Worldwide</span>
+            <span className="text-white"> Worldwide</span>
           </h2>
 
-          <p className="text-xl md:text-2xl text-cyan-200/80 leading-relaxed max-w-4xl mx-auto">
+          <p className="text-xl md:text-2xl text-slate-300 leading-relaxed max-w-4xl mx-auto">
             Join renowned oceanographers and marine biologists advancing
             conservation science through integrated data intelligence
           </p>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Enhanced Marquee Rows */}
-      <div className="relative space-y-8">
-        {/* Gradient overlays for smooth edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-950 to-transparent z-20 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-950 to-transparent z-20 pointer-events-none" />
+        {/* Testimonials Grid - Simple and guaranteed to work */}
+        <div
+          ref={cardsRef}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"
+        >
+          {marineResearchTestimonials.map((testimonial, index) => (
+            <div key={index} className="testimonial-card">
+              <TestimonialCard testimonial={testimonial} index={index} />
+            </div>
+          ))}
+        </div>
 
-        <EnhancedMarqueeRow testimonials={firstRow} speed={60} />
-        <EnhancedMarqueeRow
-          testimonials={secondRow}
-          reverse={true}
-          speed={45}
-        />
-      </div>
-
-      {/* Stats Section */}
-      <motion.div
-        className="mt-24 text-center"
-        initial={{ opacity: 0, y: 40 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-        transition={{ delay: 0.6, duration: 0.8 }}
-      >
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { number: "150+", label: "Research Partners" },
-              { number: "45", label: "Countries" },
-              { number: "2M+", label: "Species Records" },
-              { number: "99.2%", label: "Accuracy Rate" },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                className="text-center"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={
-                  isInView
-                    ? { opacity: 1, scale: 1 }
-                    : { opacity: 0, scale: 0.8 }
-                }
-                transition={{ delay: 0.8 + index * 0.1 }}
-              >
-                <div className="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">
-                  {stat.number}
+        {/* Stats Section */}
+        <div className="text-center">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {[
+                { number: "150+", label: "Research Partners" },
+                { number: "45", label: "Countries" },
+                { number: "2M+", label: "Species Records" },
+                { number: "99.2%", label: "Accuracy Rate" },
+              ].map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-slate-400 text-sm font-medium">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-cyan-200/80 text-sm font-medium">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </motion.div>
-
-      {/* Decorative elements */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-cyan-500/5 pointer-events-none" />
+      </div>
     </section>
   );
 };

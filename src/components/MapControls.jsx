@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
   Droplets,
   Fish,
   Waves,
+  Activity,
 } from "lucide-react";
 
 const MapControls = ({
@@ -55,6 +57,19 @@ const MapControls = ({
     clustering: false,
   });
 
+  const controlsRef = useRef([]);
+
+  useEffect(() => {
+    // GSAP animations for smooth entrance
+    gsap.from(controlsRef.current, {
+      opacity: 0,
+      y: 20,
+      duration: 0.6,
+      stagger: 0.1,
+      ease: "power2.out",
+    });
+  }, []);
+
   const handleLayerToggle = (layer, enabled) => {
     setActiveLayers((prev) => ({ ...prev, [layer]: enabled }));
     onLayerToggle?.(layer, enabled);
@@ -79,25 +94,25 @@ const MapControls = ({
       key: "temperature",
       label: "Temperature",
       icon: Thermometer,
-      color: "text-red-500",
+      color: "from-red-500 to-orange-500",
     },
     {
       key: "salinity",
       label: "Salinity",
       icon: Droplets,
-      color: "text-blue-500",
+      color: "from-blue-500 to-cyan-500",
     },
     {
       key: "biodiversity",
       label: "Biodiversity",
       icon: Fish,
-      color: "text-green-500",
+      color: "from-green-500 to-emerald-500",
     },
     {
       key: "fishing",
       label: "Fishing Zones",
       icon: Waves,
-      color: "text-yellow-600",
+      color: "from-yellow-500 to-amber-500",
     },
   ];
 
@@ -107,171 +122,222 @@ const MapControls = ({
         key: "heatmap",
         label: "Heatmap",
         icon: MapPin,
-        color: "text-purple-500",
+        color: "from-purple-500 to-violet-500",
       },
       {
         key: "clustering",
         label: "Data Clustering",
         icon: Layers,
-        color: "text-orange-500",
+        color: "from-orange-500 to-red-500",
       }
     );
   }
-  
-  // Add this to your MapControls component
-  const tileLayerOptions = [
-    {
-      name: "OpenStreetMap",
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-    {
-      name: "Satellite",
-      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
-    },
-    {
-      name: "Terrain",
-      url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-    },
-  ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Search Bar */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            Search Locations
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div
+        ref={(el) => (controlsRef.current[0] = el)}
+        className="dashboard-card"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <Search className="h-5 w-5 text-cyan-400" />
+          <h3 className="text-lg font-semibold text-white">Search Locations</h3>
+        </div>
+
+        <div className="space-y-4">
           <div className="flex gap-2">
-            <Input
-              placeholder="Search locations, species, or coordinates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button onClick={handleSearch} size="sm">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search locations, species, or coordinates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                className="pl-10 bg-slate-800/50 border-cyan-500/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+              />
+            </div>
+            <Button
+              onClick={handleSearch}
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+            >
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex gap-1 flex-wrap">
-            <Badge variant="outline" className="text-xs">
-              Arabian Sea
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              Bay of Bengal
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              Kerala Coast
-            </Badge>
+
+          <div className="flex gap-2 flex-wrap">
+            {["Arabian Sea", "Bay of Bengal", "Kerala Coast"].map(
+              (location) => (
+                <Badge
+                  key={location}
+                  className="bg-slate-700/50 text-cyan-300 border-cyan-500/30 hover:bg-slate-600/50 cursor-pointer transition-colors"
+                >
+                  {location}
+                </Badge>
+              )
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Layer Controls */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Layers className="h-4 w-4" />
-              Map Layers
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
-            </Button>
+      <div
+        ref={(el) => (controlsRef.current[1] = el)}
+        className="dashboard-card"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Layers className="h-5 w-5 text-cyan-400" />
+            <h3 className="text-lg font-semibold text-white">Map Layers</h3>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+          <Button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </div>
+
+        <div className="space-y-4">
           {layerConfigs.map((layer) => {
             const IconComponent = layer.icon;
             return (
               <div
                 key={layer.key}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/30 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <IconComponent className={`h-4 w-4 ${layer.color}`} />
-                  <span className="text-sm font-medium">{layer.label}</span>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-lg bg-gradient-to-br ${layer.color} flex items-center justify-center`}
+                  >
+                    <IconComponent className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-slate-200 font-medium">
+                    {layer.label}
+                  </span>
                 </div>
                 <Switch
                   checked={activeLayers[layer.key]}
                   onCheckedChange={(checked) =>
                     handleLayerToggle(layer.key, checked)
                   }
+                  className="data-[state=checked]:bg-cyan-500"
                 />
               </div>
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Advanced Filters */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div
+        ref={(el) => (controlsRef.current[2] = el)}
+        className="dashboard-card"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <Filter className="h-5 w-5 text-cyan-400" />
+          <h3 className="text-lg font-semibold text-white">Filters</h3>
+        </div>
+
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              TIME RANGE
+            <Label className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Time Range
             </Label>
             <Select
               value={activeFilters.dateRange}
               onValueChange={(value) => handleFilterChange("dateRange", value)}
             >
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="bg-slate-800/50 border-cyan-500/20 text-slate-200">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="24hours">Last 24 Hours</SelectItem>
-                <SelectItem value="7days">Last 7 Days</SelectItem>
-                <SelectItem value="30days">Last 30 Days</SelectItem>
-                <SelectItem value="3months">Last 3 Months</SelectItem>
-                <SelectItem value="1year">Last Year</SelectItem>
+              <SelectContent className="bg-slate-900 border-cyan-500/20">
+                <SelectItem
+                  value="24hours"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Last 24 Hours
+                </SelectItem>
+                <SelectItem
+                  value="7days"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Last 7 Days
+                </SelectItem>
+                <SelectItem
+                  value="30days"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Last 30 Days
+                </SelectItem>
+                <SelectItem
+                  value="3months"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Last 3 Months
+                </SelectItem>
+                <SelectItem
+                  value="1year"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Last Year
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              CATEGORY
+            <Label className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Category
             </Label>
             <Select
               value={activeFilters.category}
               onValueChange={(value) => handleFilterChange("category", value)}
             >
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="bg-slate-800/50 border-cyan-500/20 text-slate-200">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="oceanography">Oceanography</SelectItem>
-                <SelectItem value="biodiversity">Biodiversity</SelectItem>
-                <SelectItem value="fishing">Fishing Data</SelectItem>
-                <SelectItem value="conservation">Conservation</SelectItem>
+              <SelectContent className="bg-slate-900 border-cyan-500/20">
+                <SelectItem
+                  value="all"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  All Categories
+                </SelectItem>
+                <SelectItem
+                  value="oceanography"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Oceanography
+                </SelectItem>
+                <SelectItem
+                  value="biodiversity"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Biodiversity
+                </SelectItem>
+                <SelectItem
+                  value="fishing"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Fishing Data
+                </SelectItem>
+                <SelectItem
+                  value="conservation"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Conservation
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">
-              SEARCH RADIUS ({activeFilters.radius}km)
+          <div className="space-y-3">
+            <Label className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Search Radius ({activeFilters.radius}km)
             </Label>
             <Slider
               value={[activeFilters.radius]}
@@ -285,120 +351,125 @@ const MapControls = ({
 
           {userRole !== "public" && (
             <>
-              <Separator />
-              <div className="space-y-3">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  PARAMETER RANGES
+              <Separator className="border-cyan-500/20" />
+              <div className="space-y-4">
+                <Label className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                  Parameter Ranges
                 </Label>
 
-                <div className="space-y-2">
-                  <Label className="text-xs">
-                    Temperature (°C): {activeFilters.temperature[0]} -{" "}
-                    {activeFilters.temperature[1]}
-                  </Label>
-                  <Slider
-                    value={activeFilters.temperature}
-                    onValueChange={(value) =>
-                      handleFilterChange("temperature", value)
-                    }
-                    max={40}
-                    min={0}
-                    step={0.5}
-                    className="w-full"
-                  />
-                </div>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-slate-300 mb-2 block">
+                      Temperature (°C): {activeFilters.temperature[0]} -{" "}
+                      {activeFilters.temperature[1]}
+                    </Label>
+                    <Slider
+                      value={activeFilters.temperature}
+                      onValueChange={(value) =>
+                        handleFilterChange("temperature", value)
+                      }
+                      max={40}
+                      min={0}
+                      step={0.5}
+                      className="w-full"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs">
-                    Salinity (‰): {activeFilters.salinity[0]} -{" "}
-                    {activeFilters.salinity[1]}
-                  </Label>
-                  <Slider
-                    value={activeFilters.salinity}
-                    onValueChange={(value) =>
-                      handleFilterChange("salinity", value)
-                    }
-                    max={45}
-                    min={25}
-                    step={0.1}
-                    className="w-full"
-                  />
-                </div>
+                  <div>
+                    <Label className="text-xs text-slate-300 mb-2 block">
+                      Salinity (‰): {activeFilters.salinity[0]} -{" "}
+                      {activeFilters.salinity[1]}
+                    </Label>
+                    <Slider
+                      value={activeFilters.salinity}
+                      onValueChange={(value) =>
+                        handleFilterChange("salinity", value)
+                      }
+                      max={45}
+                      min={25}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs">
-                    Depth (m): {activeFilters.depth[0]} -{" "}
-                    {activeFilters.depth[1]}
-                  </Label>
-                  <Slider
-                    value={activeFilters.depth}
-                    onValueChange={(value) =>
-                      handleFilterChange("depth", value)
-                    }
-                    max={500}
-                    min={0}
-                    step={5}
-                    className="w-full"
-                  />
+                  <div>
+                    <Label className="text-xs text-slate-300 mb-2 block">
+                      Depth (m): {activeFilters.depth[0]} -{" "}
+                      {activeFilters.depth[1]}
+                    </Label>
+                    <Slider
+                      value={activeFilters.depth}
+                      onValueChange={(value) =>
+                        handleFilterChange("depth", value)
+                      }
+                      max={500}
+                      min={0}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Export Options */}
       {userRole !== "public" && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export Data
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div
+          ref={(el) => (controlsRef.current[3] = el)}
+          className="dashboard-card"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <Download className="h-5 w-5 text-cyan-400" />
+            <h3 className="text-lg font-semibold text-white">Export Data</h3>
+          </div>
+
+          <div className="space-y-3">
             <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
               onClick={() => handleExport("csv")}
+              className="w-full justify-start bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50"
             >
+              <Download className="h-4 w-4 mr-2" />
               Export as CSV
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
               onClick={() => handleExport("pdf")}
+              className="w-full justify-start bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50"
             >
+              <Download className="h-4 w-4 mr-2" />
               Export as PDF
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
               onClick={() => handleExport("png")}
+              className="w-full justify-start bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50"
             >
+              <Download className="h-4 w-4 mr-2" />
               Export Map Image
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Live Data Status */}
-      <Card>
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium">Live Data</span>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              Updated 2m ago
-            </Badge>
+      <div
+        ref={(el) => (controlsRef.current[4] = el)}
+        className="dashboard-card"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-cyan-300 font-semibold flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Live Data
+            </span>
           </div>
-        </CardContent>
-      </Card>
+          <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+            Updated 2m ago
+          </Badge>
+        </div>
+      </div>
     </div>
   );
 };

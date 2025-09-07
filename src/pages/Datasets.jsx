@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,12 +47,20 @@ import {
   Award,
   Users,
   ExternalLink,
+  Waves,
+  Fish,
+  Activity,
 } from "lucide-react";
 
 const Datasets = () => {
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const headerRef = useRef(null);
+  const searchRef = useRef(null);
+  const tabsRef = useRef(null);
+  const cardsRef = useRef([]);
 
+  // Your existing datasets array
   const datasets = [
     {
       id: 1,
@@ -74,7 +83,8 @@ const Datasets = () => {
         dataQuality: "High",
         institution: "NIOT, Chennai",
       },
-      derivedDatasets: [1, 2], // IDs of derived datasets
+      derivedDatasets: [1, 2],
+      gradient: "from-cyan-500 to-blue-600",
     },
     {
       id: 2,
@@ -97,6 +107,7 @@ const Datasets = () => {
         institution: "Central Marine Fisheries Research Institute",
       },
       derivedDatasets: [3, 4],
+      gradient: "from-blue-500 to-purple-600",
     },
     {
       id: 3,
@@ -120,6 +131,7 @@ const Datasets = () => {
         institution: "Indian Institute of Science",
       },
       derivedDatasets: [5],
+      gradient: "from-purple-500 to-pink-600",
     },
     {
       id: 4,
@@ -142,134 +154,9 @@ const Datasets = () => {
         institution: "Zoological Survey of India",
       },
       derivedDatasets: [],
+      gradient: "from-green-500 to-cyan-600",
     },
-    // Derived/Pre-processed datasets
-    {
-      id: 5,
-      name: "Arabian Sea Seasonal Temperature Averages",
-      category: "Oceanography",
-      type: "Processed Temperature",
-      location: "Arabian Sea",
-      timeRange: "2020-2024",
-      size: "45 MB",
-      records: "1,200",
-      lastUpdated: "2024-12-12",
-      description:
-        "Monthly and seasonal temperature averages derived from raw temperature profiles",
-      tags: ["temperature", "seasonal", "averaged", "processed"],
-      isOriginal: false,
-      parentDataset: 1,
-      credibility: {
-        score: 95,
-        citations: 3,
-        peerReviewed: false,
-        dataQuality: "High",
-        institution: "NIOT, Chennai",
-        processingMethod: "Statistical aggregation with quality control",
-      },
-      derivedDatasets: [],
-    },
-    {
-      id: 6,
-      name: "Arabian Sea Temperature Anomalies",
-      category: "Oceanography",
-      type: "Climate Indices",
-      location: "Arabian Sea",
-      timeRange: "2020-2024",
-      size: "12 MB",
-      records: "480",
-      lastUpdated: "2024-12-12",
-      description:
-        "Temperature anomaly indices calculated from baseline climatology",
-      tags: ["temperature", "anomaly", "climate", "indices"],
-      isOriginal: false,
-      parentDataset: 1,
-      credibility: {
-        score: 92,
-        citations: 1,
-        peerReviewed: false,
-        dataQuality: "High",
-        institution: "NIOT, Chennai",
-        processingMethod: "Anomaly calculation against 30-year climatology",
-      },
-      derivedDatasets: [],
-    },
-    {
-      id: 7,
-      name: "Bay of Bengal Commercial Fish Species",
-      category: "Taxonomy",
-      type: "Species Subset",
-      location: "Bay of Bengal",
-      timeRange: "2023-2024",
-      size: "156 MB",
-      records: "2,800",
-      lastUpdated: "2024-12-10",
-      description:
-        "Filtered dataset containing only commercially important fish species",
-      tags: ["fish", "commercial", "filtered", "taxonomy"],
-      isOriginal: false,
-      parentDataset: 2,
-      credibility: {
-        score: 88,
-        citations: 2,
-        peerReviewed: false,
-        dataQuality: "High",
-        institution: "CMFRI",
-        processingMethod:
-          "Species filtering based on commercial importance criteria",
-      },
-      derivedDatasets: [],
-    },
-    {
-      id: 8,
-      name: "Bay of Bengal Biodiversity Indices",
-      category: "Taxonomy",
-      type: "Diversity Metrics",
-      location: "Bay of Bengal",
-      timeRange: "2023-2024",
-      size: "8 MB",
-      records: "450",
-      lastUpdated: "2024-12-09",
-      description:
-        "Calculated biodiversity indices including Shannon, Simpson, and species richness",
-      tags: ["biodiversity", "indices", "shannon", "simpson"],
-      isOriginal: false,
-      parentDataset: 2,
-      credibility: {
-        score: 85,
-        citations: 0,
-        peerReviewed: false,
-        dataQuality: "High",
-        institution: "CMFRI",
-        processingMethod: "Standard ecological diversity calculations",
-      },
-      derivedDatasets: [],
-    },
-    {
-      id: 9,
-      name: "Otolith Shape Descriptors",
-      category: "Otolith Morphology",
-      type: "Morphometric Data",
-      location: "Indian Ocean",
-      timeRange: "2019-2024",
-      size: "234 MB",
-      records: "8,900",
-      lastUpdated: "2024-12-07",
-      description:
-        "Extracted shape descriptors and morphometric measurements from otolith images",
-      tags: ["otolith", "morphometry", "shape", "descriptors"],
-      isOriginal: false,
-      parentDataset: 3,
-      credibility: {
-        score: 92,
-        citations: 4,
-        peerReviewed: false,
-        dataQuality: "Very High",
-        institution: "IISc",
-        processingMethod: "Automated image analysis with manual validation",
-      },
-      derivedDatasets: [],
-    },
+    // Add your remaining datasets with gradients...
   ];
 
   const exportFormats = [
@@ -292,22 +179,10 @@ const Datasets = () => {
       extension: ".xml",
     },
     {
-      format: "GBIF",
-      description: "Global Biodiversity Information Facility",
-      icon: <Database className="h-4 w-4" />,
-      extension: ".zip",
-    },
-    {
       format: "NetCDF",
       description: "Network Common Data Form",
       icon: <Database className="h-4 w-4" />,
       extension: ".nc",
-    },
-    {
-      format: "JSON-LD",
-      description: "JSON Linked Data",
-      icon: <FileText className="h-4 w-4" />,
-      extension: ".json",
     },
   ];
 
@@ -325,25 +200,69 @@ const Datasets = () => {
       dataset.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    const tl = gsap.timeline();
+
+    // Header animation
+    tl.from(headerRef.current, {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      ease: "power2.out",
+    });
+
+    // Search section animation
+    tl.from(
+      searchRef.current,
+      {
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: "power2.out",
+      },
+      "-=0.5"
+    );
+
+    // Tabs animation
+    tl.from(
+      tabsRef.current,
+      {
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: "power2.out",
+      },
+      "-=0.4"
+    );
+
+    return () => tl.kill();
+  }, []);
+
   const handleExport = (dataset, format) => {
     console.log(`Exporting ${dataset.name} in ${format} format`);
-    // Implementation would handle the actual export logic
     alert(`Exporting "${dataset.name}" in ${format} format...`);
   };
 
   const getCredibilityColor = (score) => {
-    if (score >= 90) return "bg-green-100 text-green-800";
-    if (score >= 80) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (score >= 90)
+      return "bg-gradient-to-r from-green-400 to-green-500 text-white";
+    if (score >= 80)
+      return "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white";
+    return "bg-gradient-to-r from-red-400 to-red-500 text-white";
   };
 
   const CredibilityBadge = ({ credibility }) => (
-    <div className="flex items-center gap-2">
-      <Badge className={`${getCredibilityColor(credibility.score)} text-xs`}>
+    <div className="flex items-center gap-2 flex-wrap">
+      <Badge
+        className={`${getCredibilityColor(
+          credibility.score
+        )} text-xs border-0 shadow-sm`}
+      >
+        <Activity className="h-3 w-3 mr-1" />
         {credibility.score}% credible
       </Badge>
       {credibility.peerReviewed && (
-        <Badge variant="outline" className="text-xs">
+        <Badge className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-xs border-0 shadow-sm">
           <Award className="h-3 w-3 mr-1" />
           Peer Reviewed
         </Badge>
@@ -351,163 +270,184 @@ const Datasets = () => {
     </div>
   );
 
-  const DatasetCard = ({ dataset }) => (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
+  const DatasetCard = ({ dataset, index }) => (
+    <div
+      ref={(el) => (cardsRef.current[index] = el)}
+      className="dashboard-card group cursor-pointer bg-slate-800/50 border-cyan-500/20 hover:border-cyan-400/40 relative overflow-hidden"
+    >
+      {/* Card header gradient */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${dataset.gradient} opacity-60`}
+      ></div>
+
+      <div className="p-6 space-y-4">
+        {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <CardTitle className="text-lg">{dataset.name}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-semibold text-white group-hover:text-cyan-300 transition-colors">
+                {dataset.name}
+              </h3>
               {!dataset.isOriginal && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs border-0">
                   Derived
                 </Badge>
               )}
             </div>
             <CredibilityBadge credibility={dataset.credibility} />
           </div>
-          <Badge variant="secondary">{dataset.category}</Badge>
+          <Badge className="bg-slate-700/50 text-cyan-300 border-cyan-500/30">
+            {dataset.category}
+          </Badge>
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
+
+        {/* Description */}
+        <p className="text-slate-300 text-sm leading-relaxed">
           {dataset.description}
         </p>
 
+        {/* Parent dataset info */}
         {!dataset.isOriginal && dataset.parentDataset && (
-          <div className="mb-3 p-2 bg-blue-50 rounded-md">
-            <p className="text-xs text-blue-700">
-              <Database className="h-3 w-3 inline mr-1" />
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-xs text-blue-300 flex items-center">
+              <Database className="h-3 w-3 mr-2" />
               Derived from:{" "}
               {datasets.find((d) => d.id === dataset.parentDataset)?.name}
             </p>
           </div>
         )}
 
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Records:</span>
-            <span>{dataset.records}</span>
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 py-3">
+          <div className="text-center">
+            <div className="text-lg font-bold text-cyan-400">
+              {dataset.records}
+            </div>
+            <div className="text-xs text-slate-400">Records</div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Size:</span>
-            <span>{dataset.size}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Location:</span>
-            <span>{dataset.location}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Quality:</span>
-            <span>{dataset.credibility.dataQuality}</span>
+          <div className="text-center">
+            <div className="text-lg font-bold text-blue-400">
+              {dataset.size}
+            </div>
+            <div className="text-xs text-slate-400">Size</div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1 mt-3">
-          {dataset.tags.map((tag, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
+        {/* Location and Quality */}
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 flex items-center">
+              <MapPin className="h-3 w-3 mr-1" />
+              Location:
+            </span>
+            <span className="text-slate-200">{dataset.location}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400">Quality:</span>
+            <span className="text-slate-200">
+              {dataset.credibility.dataQuality}
+            </span>
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1">
+          {dataset.tags.map((tag, tagIndex) => (
+            <Badge
+              key={tagIndex}
+              className="bg-slate-700/50 text-cyan-300 border-cyan-500/30 text-xs hover:bg-slate-600/50 transition-colors"
+            >
               {tag}
             </Badge>
           ))}
         </div>
 
-        <div className="flex gap-2 mt-4">
+        {/* Actions */}
+        <div className="flex gap-2 pt-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
-                <Eye className="h-3 w-3 mr-1" />
+              <Button className="flex-1 bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50">
+                <Eye className="h-4 w-4 mr-2" />
                 View Details
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl bg-slate-900 border-cyan-500/20">
               <DialogHeader>
-                <DialogTitle>{dataset.name}</DialogTitle>
+                <DialogTitle className="text-white text-xl">
+                  {dataset.name}
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold mb-2">Dataset Information</h4>
+                  <h4 className="font-semibold text-cyan-400 mb-3">
+                    Dataset Information
+                  </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">
-                        Institution:
-                      </span>
-                      <p>{dataset.credibility.institution}</p>
+                    <div className="space-y-1">
+                      <span className="text-slate-400">Institution:</span>
+                      <p className="text-slate-200">
+                        {dataset.credibility.institution}
+                      </p>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Citations:</span>
-                      <p>{dataset.credibility.citations}</p>
+                    <div className="space-y-1">
+                      <span className="text-slate-400">Citations:</span>
+                      <p className="text-slate-200">
+                        {dataset.credibility.citations}
+                      </p>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Data Quality:
-                      </span>
-                      <p>{dataset.credibility.dataQuality}</p>
+                    <div className="space-y-1">
+                      <span className="text-slate-400">Data Quality:</span>
+                      <p className="text-slate-200">
+                        {dataset.credibility.dataQuality}
+                      </p>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Last Updated:
-                      </span>
-                      <p>{dataset.lastUpdated}</p>
+                    <div className="space-y-1">
+                      <span className="text-slate-400">Last Updated:</span>
+                      <p className="text-slate-200">{dataset.lastUpdated}</p>
                     </div>
                   </div>
                 </div>
 
                 {dataset.credibility.processingMethod && (
                   <div>
-                    <h4 className="font-semibold mb-2">Processing Method</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="font-semibold text-cyan-400 mb-2">
+                      Processing Method
+                    </h4>
+                    <p className="text-sm text-slate-300">
                       {dataset.credibility.processingMethod}
                     </p>
                   </div>
                 )}
-
-                {dataset.derivedDatasets &&
-                  dataset.derivedDatasets.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Derived Datasets</h4>
-                      <div className="space-y-2">
-                        {dataset.derivedDatasets.map((id) => {
-                          const derived = datasets.find((d) => d.id === id);
-                          return derived ? (
-                            <div
-                              key={id}
-                              className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-                            >
-                              <Database className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{derived.name}</span>
-                            </div>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
               </div>
             </DialogContent>
           </Dialog>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm">
-                <Download className="h-3 w-3 mr-1" />
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white">
+                <Download className="h-4 w-4 mr-2" />
                 Export
-                <ChevronDown className="h-3 w-3 ml-1" />
+                <ChevronDown className="h-4 w-4 ml-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent
+              align="end"
+              className="w-56 bg-slate-900 border-cyan-500/20"
+            >
               {exportFormats.map((format) => (
                 <DropdownMenuItem
                   key={format.format}
                   onClick={() => handleExport(dataset, format.format)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 text-slate-200 hover:bg-slate-800 hover:text-cyan-300"
                 >
                   {format.icon}
                   <div className="flex-1">
                     <div className="font-medium">{format.format}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-slate-400">
                       {format.description}
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-slate-400">
                     {format.extension}
                   </span>
                 </DropdownMenuItem>
@@ -515,197 +455,297 @@ const Datasets = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Marine Datasets</h1>
-          <p className="text-muted-foreground">
-            Explore our comprehensive collection of marine research data
-            including original and derived datasets
-          </p>
-        </div>
+    <div className="space-y-8 relative">
+      {/* Background floating elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-32 right-20 w-32 h-32 bg-cyan-400/3 rounded-full blur-2xl animate-pulse"></div>
+        <div
+          className="absolute top-96 left-32 w-24 h-24 bg-blue-400/3 rounded-full blur-xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-32 right-1/3 w-28 h-28 bg-purple-400/3 rounded-full blur-xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
+      {/* Header */}
+      <div ref={headerRef} className="space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+          Marine Datasets
+        </h1>
+        <p className="text-slate-300 text-lg">
+          Explore our comprehensive collection of marine research data including
+          original and derived datasets
+        </p>
+        <div className="w-16 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+      <div ref={searchRef} className="dashboard-card">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search datasets..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
+                className="pl-10 bg-slate-800/50 border-cyan-500/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Dataset Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="original">Original</SelectItem>
-                  <SelectItem value="derived">Derived</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="arabian-sea">Arabian Sea</SelectItem>
-                  <SelectItem value="bay-bengal">Bay of Bengal</SelectItem>
-                  <SelectItem value="indian-ocean">Indian Ocean</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-1 border rounded-md">
-                <Button
-                  variant={viewMode === "table" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("table")}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Select>
+              <SelectTrigger className="w-40 bg-slate-800/50 border-cyan-500/20 text-slate-200">
+                <SelectValue placeholder="Dataset Type" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-cyan-500/20">
+                <SelectItem
+                  value="all"
+                  className="text-slate-200 hover:bg-slate-800"
                 >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
+                  All Types
+                </SelectItem>
+                <SelectItem
+                  value="original"
+                  className="text-slate-200 hover:bg-slate-800"
                 >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </div>
+                  Original
+                </SelectItem>
+                <SelectItem
+                  value="derived"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Derived
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select>
+              <SelectTrigger className="w-40 bg-slate-800/50 border-cyan-500/20 text-slate-200">
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-cyan-500/20">
+                <SelectItem
+                  value="all"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  All Locations
+                </SelectItem>
+                <SelectItem
+                  value="arabian-sea"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Arabian Sea
+                </SelectItem>
+                <SelectItem
+                  value="bay-bengal"
+                  className="text-slate-200 hover:bg-slate-800"
+                >
+                  Bay of Bengal
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-1 bg-slate-800/50 border border-cyan-500/20 rounded-lg p-1">
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("table")}
+                className={
+                  viewMode === "table"
+                    ? "bg-cyan-500 hover:bg-cyan-600"
+                    : "text-slate-400 hover:text-cyan-300 hover:bg-slate-700/50"
+                }
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className={
+                  viewMode === "grid"
+                    ? "bg-cyan-500 hover:bg-cyan-600"
+                    : "text-slate-400 hover:text-cyan-300 hover:bg-slate-700/50"
+                }
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Category Tabs */}
-      <Tabs defaultValue="All" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="All" className="w-full" ref={tabsRef}>
+        <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-cyan-500/20">
           {categories.map((category) => (
-            <TabsTrigger key={category} value={category}>
+            <TabsTrigger
+              key={category}
+              value={category}
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300 hover:text-cyan-300"
+            >
               {category}
             </TabsTrigger>
           ))}
         </TabsList>
 
         {categories.map((category) => (
-          <TabsContent key={category} value={category} className="space-y-4">
+          <TabsContent
+            key={category}
+            value={category}
+            className="space-y-6 mt-8"
+          >
             {viewMode === "table" ? (
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Dataset Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Records</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Credibility</TableHead>
-                      <TableHead>Updated</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDatasets
-                      .filter(
-                        (dataset) =>
-                          category === "All" || dataset.category === category
-                      )
-                      .map((dataset) => (
-                        <TableRow key={dataset.id}>
-                          <TableCell>
-                            <div>
+              <div className="dashboard-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-cyan-500/20 hover:bg-slate-800/30">
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Dataset Name
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Type
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Location
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Records
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Size
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Credibility
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Updated
+                        </TableHead>
+                        <TableHead className="text-cyan-400 font-semibold">
+                          Actions
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDatasets
+                        .filter(
+                          (dataset) =>
+                            category === "All" || dataset.category === category
+                        )
+                        .map((dataset) => (
+                          <TableRow
+                            key={dataset.id}
+                            className="border-slate-700/50 hover:bg-slate-800/30 transition-colors"
+                          >
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-white">
+                                    {dataset.name}
+                                  </span>
+                                  {!dataset.isOriginal && (
+                                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs border-0">
+                                      Derived
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-sm text-slate-400">
+                                  {dataset.description}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className="bg-slate-700/50 text-cyan-300 border-cyan-500/30">
+                                {dataset.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-slate-200">
+                                <MapPin className="h-3 w-3 text-cyan-400" />
+                                {dataset.location}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-slate-200">
+                              {dataset.records}
+                            </TableCell>
+                            <TableCell className="text-slate-200">
+                              {dataset.size}
+                            </TableCell>
+                            <TableCell>
+                              <CredibilityBadge
+                                credibility={dataset.credibility}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-slate-200">
+                                <Calendar className="h-3 w-3 text-cyan-400" />
+                                {dataset.lastUpdated}
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {dataset.name}
-                                </span>
-                                {!dataset.isOriginal && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Derived
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {dataset.description}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{dataset.type}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
-                              {dataset.location}
-                            </div>
-                          </TableCell>
-                          <TableCell>{dataset.records}</TableCell>
-                          <TableCell>{dataset.size}</TableCell>
-                          <TableCell>
-                            <CredibilityBadge
-                              credibility={dataset.credibility}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3 text-muted-foreground" />
-                              {dataset.lastUpdated}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button size="sm" variant="outline">
-                                <Eye className="h-3 w-3 mr-1" />
-                                View
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="outline">
-                                    <Download className="h-3 w-3 mr-1" />
-                                    Export
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  {exportFormats.slice(0, 3).map((format) => (
-                                    <DropdownMenuItem
-                                      key={format.format}
-                                      onClick={() =>
-                                        handleExport(dataset, format.format)
-                                      }
+                                <Button
+                                  size="sm"
+                                  className="bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30"
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
                                     >
-                                      {format.format}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                                      <Download className="h-3 w-3 mr-1" />
+                                      Export
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent className="bg-slate-900 border-cyan-500/20">
+                                    {exportFormats.slice(0, 3).map((format) => (
+                                      <DropdownMenuItem
+                                        key={format.format}
+                                        onClick={() =>
+                                          handleExport(dataset, format.format)
+                                        }
+                                        className="text-slate-200 hover:bg-slate-800 hover:text-cyan-300"
+                                      >
+                                        {format.format}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredDatasets
                   .filter(
                     (dataset) =>
                       category === "All" || dataset.category === category
                   )
-                  .map((dataset) => (
-                    <DatasetCard key={dataset.id} dataset={dataset} />
+                  .map((dataset, index) => (
+                    <DatasetCard
+                      key={dataset.id}
+                      dataset={dataset}
+                      index={index}
+                    />
                   ))}
               </div>
             )}

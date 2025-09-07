@@ -1,8 +1,6 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+ width: 100%;
+  min-height: 100vh;
 }
 
 .logo {
@@ -603,4 +601,467 @@
 /* Remove any potential conflicts */
 .timeline-float {
   display: none;
+}
+
+/* Ensure full width sections work properly */
+.w-full {
+  width: 100% !important;
+}
+
+/* Fix any potential z-index issues */
+.relative {
+  position: relative;
+  z-index: auto;
+}
+
+/* Ensure floating elements don't interfere */
+.pointer-events-none {
+  pointer-events: none;
+}
+
+/* Clean up any conflicting animation rules */
+@keyframes float-gentle {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+    opacity: 0.1;
+  }
+  50% { 
+    transform: translateY(-20px) scale(1.1); 
+    opacity: 0.2;
+  }
+}
+/* Add to your global CSS to eliminate white sections */
+html, body {
+  background-color: #0f172a;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  width: 100%;
+  background-color: #0f172a;
+}
+
+/* Ensure no white gaps between sections */
+main {
+  width: 100%;
+  background-color: #0f172a;
+}
+
+/* Fix any potential spacing issues */
+section {
+  margin: 0;
+  padding: 0;
+}
+/* Add to your global CSS to eliminate white sections */
+html, body {
+  background-color: #0f172a;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  width: 100%;
+  background-color: #0f172a;
+}
+
+/* Ensure no white gaps between sections */
+main {
+  width: 100%;
+  background-color: #0f172a;
+}
+
+/* Fix any potential spacing issues */
+section {
+  margin: 0;
+  padding: 0;
+}
+/* Dashboard Ocean Theme Enhancements */
+.dashboard-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  min-height: 100vh;
+}
+
+.dashboard-card {
+  @apply bg-slate-800/50 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-6 transition-all duration-500;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-card:hover {
+  @apply border-cyan-400/40 shadow-2xl;
+  box-shadow: 0 20px 40px rgba(6, 182, 212, 0.1);
+  transform: translateY(-5px);
+}
+
+.dashboard-metric-card {
+  @apply dashboard-card relative overflow-hidden;
+}
+
+.dashboard-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-metric-card:hover::before {
+  opacity: 1;
+}
+
+.dashboard-stat-number {
+  @apply text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.dashboard-grid {
+  @apply grid gap-6 mb-8;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Sidebar Ocean Theme */
+.sidebar-ocean {
+  @apply bg-slate-900/95 backdrop-blur-md border-r border-cyan-500/20;
+}
+
+.sidebar-nav-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50 transition-all duration-300;
+}
+
+.sidebar-nav-item.active {
+  @apply text-cyan-400 bg-slate-800/70;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+}
+
+.sidebar-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #06b6d4, #0ea5e9);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-nav-item.active::before {
+  opacity: 1;
+}
+
+/* Top Navigation Ocean Theme */
+.top-nav-ocean {
+  @apply bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 px-6 py-4;
+}
+
+.top-nav-search {
+  @apply bg-slate-800/50 border border-cyan-500/20 rounded-lg px-4 py-2 text-slate-200 placeholder-slate-400;
+}
+
+.top-nav-search:focus {
+  @apply outline-none border-cyan-400/50 ring-2 ring-cyan-400/20;
+}
+
+/* Enhanced floating elements for dashboard */
+.dashboard-floating-element {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.1), rgba(14, 165, 233, 0.05));
+  pointer-events: none;
+  animation: dashboard-float 15s ease-in-out infinite;
+}
+
+@keyframes dashboard-float {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% { 
+    transform: translateY(-30px) translateX(20px) scale(1.1) rotate(90deg);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateY(-15px) translateX(-25px) scale(0.9) rotate(180deg);
+    opacity: 0.8;
+  }
+  75% { 
+    transform: translateY(-40px) translateX(15px) scale(1.05) rotate(270deg);
+    opacity: 0.5;
+  }
+}
+
+/* Responsive dashboard grid */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 4;
+  }
+  
+  .dashboard-card {
+    @apply p-4;
+  }
+  
+  .dashboard-stat-number {
+    @apply text-3xl;
+  }
+}
+
+/* Chart container styling */
+.dashboard-chart-container {
+  @apply dashboard-card min-h-[300px] relative;
+}
+
+.dashboard-chart-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+  opacity: 0.5;
+}
+
+/* Data table styling */
+.dashboard-table {
+  @apply w-full bg-transparent;
+}
+
+.dashboard-table th {
+  @apply text-cyan-400 font-semibold py-3 px-4 border-b border-cyan-500/20;
+}
+
+.dashboard-table td {
+  @apply text-slate-300 py-3 px-4 border-b border-slate-700/50;
+}
+
+.dashboard-table tr:hover {
+  @apply bg-slate-800/30;
+}
+/* Sidebar Ocean Theme Enhancements */
+.sidebar-ocean-enhanced [data-sidebar="sidebar"] {
+  background: transparent;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-ocean-enhanced ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-ocean-enhanced ::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.sidebar-ocean-enhanced ::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #06b6d4, #0ea5e9);
+  border-radius: 2px;
+}
+
+.sidebar-ocean-enhanced ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #0891b2, #0284c7);
+}
+
+/* TopNav Ocean Theme */
+.top-nav-ocean-enhanced {
+  position: relative;
+}
+
+.top-nav-ocean-enhanced::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #22d3ee, #06b6d4, #0ea5e9, transparent);
+  opacity: 0.6;
+}
+
+/* Search input focus effects */
+.search-ocean-focus:focus {
+  box-shadow: 
+    0 0 0 1px rgba(34, 211, 238, 0.5),
+    0 0 20px rgba(34, 211, 238, 0.1);
+}
+
+/* Avatar glow effect */
+.avatar-ocean-glow {
+  position: relative;
+}
+
+.avatar-ocean-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #06b6d4, #0ea5e9, #3b82f6);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.avatar-ocean-glow:hover::before {
+  opacity: 0.3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .top-nav-ocean-enhanced .hidden\:sm\:block {
+    display: none;
+  }
+}
+/* Fix text visibility on dark background */
+.bg-slate-900, 
+.bg-slate-900 * {
+  color: #e2e8f0; /* slate-200 */
+}
+
+/* Ensure proper text colors for main content area */
+main {
+  color: #e2e8f0;
+}
+
+/* Fix heading colors */
+h1, h2, h3, h4, h5, h6 {
+  color: #f8fafc !important; /* slate-50 */
+}
+
+/* Fix paragraph and general text */
+p, span, div, label {
+  color: #cbd5e1; /* slate-300 */
+}
+
+/* Fix muted text */
+.text-muted-foreground {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* Fix card content */
+.bg-white, .bg-gray-50, .bg-gray-100 {
+  background-color: rgba(51, 65, 85, 0.8) !important; /* slate-700/80 */
+  color: #e2e8f0 !important;
+}
+
+/* Fix button text */
+button {
+  color: inherit;
+}
+
+/* Fix input placeholders */
+input::placeholder {
+  color: #64748b; /* slate-500 */
+}
+
+/* Fix tab content */
+[role="tabpanel"] {
+  color: #cbd5e1;
+}
+
+/* Fix specific UI components */
+.card, .border {
+  background-color: rgba(51, 65, 85, 0.5);
+  border-color: rgba(34, 211, 238, 0.2);
+  color: #e2e8f0;
+}
+
+/* Fix upload area text */
+.upload-area {
+  color: #94a3b8; /* slate-400 */
+}
+
+.upload-area:hover {
+  color: #cbd5e1; /* slate-300 */
+}
+/* Enhanced dashboard metric cards */
+.dashboard-metric-card {
+  @apply bg-slate-800/50 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-6 transition-all duration-500 relative overflow-hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-metric-card:hover {
+  @apply border-cyan-400/40;
+  box-shadow: 0 20px 40px rgba(6, 182, 212, 0.1);
+  transform: translateY(-5px) scale(1.02);
+}
+
+.dashboard-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-metric-card:hover::before {
+  opacity: 1;
+}
+
+/* Ocean wave effects for hero section */
+.ocean-wave-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 60%;
+  transform: translateY(-50%);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: wave-flow 4s ease-in-out infinite;
+}
+
+.ocean-wave-glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 60%;
+  transform: translateY(-50%);
+  height: 8px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  filter: blur(4px);
+  animation: wave-glow 4s ease-in-out infinite alternate;
+}
+
+/* Badge enhancements */
+.dashboard-card .bg-gradient-to-r {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card .bg-gradient-to-r::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.dashboard-card:hover .bg-gradient-to-r::before {
+  left: 100%;
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+  .dashboard-metric-card {
+    @apply p-4;
+  }
+  
+  .dashboard-metric-card .text-3xl {
+    @apply text-2xl;
+  }
 }

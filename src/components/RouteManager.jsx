@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,9 @@ import {
   Calculator,
   Clock,
   Ruler,
+  Ship,
+  Target,
+  Activity,
 } from "lucide-react";
 
 const RouteManager = ({
@@ -50,6 +54,19 @@ const RouteManager = ({
     fuelConsumption: "2,850L",
     averageSpeed: "12 knots",
   });
+
+  const cardsRef = useRef([]);
+
+  useEffect(() => {
+    // GSAP animations for smooth entrance
+    gsap.from(cardsRef.current, {
+      opacity: 0,
+      y: 30,
+      duration: 0.6,
+      stagger: 0.1,
+      ease: "power2.out",
+    });
+  }, []);
 
   const addWaypoint = () => {
     if (!newPoint.name || !newPoint.lat || !newPoint.lng) return;
@@ -103,226 +120,238 @@ const RouteManager = ({
   const getPointIcon = (type) => {
     switch (type) {
       case "start":
-        return "🚢";
+        return Ship;
       case "end":
-        return "🏁";
+        return Target;
       default:
-        return "📍";
+        return MapPin;
     }
   };
 
   const getPointColor = (type) => {
     switch (type) {
       case "start":
-        return "bg-green-500";
+        return "from-green-500 to-emerald-600";
       case "end":
-        return "bg-red-500";
+        return "from-red-500 to-rose-600";
       default:
-        return "bg-primary";
+        return "from-cyan-500 to-blue-600";
     }
   };
 
   if (userRole === "public") {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Navigation className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Route Planning</h3>
-          <p className="text-sm text-muted-foreground">
-            Advanced route planning tools are available for researchers and
-            administrators.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="dashboard-card text-center">
+        <Navigation className="h-16 w-16 text-cyan-400/60 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Route Planning
+        </h3>
+        <p className="text-slate-300">
+          Advanced route planning tools are available for researchers and
+          administrators.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Route Points */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Route className="h-4 w-4" />
-            Route Points
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {routePoints.map((point, index) => (
-            <div
-              key={point.id}
-              className="flex items-center gap-3 p-2 border rounded-lg"
-            >
+      <div ref={(el) => (cardsRef.current[0] = el)} className="dashboard-card">
+        <div className="flex items-center gap-3 mb-6">
+          <Route className="h-6 w-6 text-cyan-400" />
+          <h3 className="text-xl font-semibold text-white">Route Points</h3>
+        </div>
+
+        <div className="space-y-3">
+          {routePoints.map((point, index) => {
+            const IconComponent = getPointIcon(point.type);
+            return (
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${getPointColor(
-                  point.type
-                )}`}
+                key={point.id}
+                className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/30 transition-all duration-300"
               >
-                {index + 1}
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-sm">{point.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {point.lat.toFixed(4)}, {point.lng.toFixed(4)}
+                <div
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getPointColor(
+                    point.type
+                  )} flex items-center justify-center shadow-lg`}
+                >
+                  <IconComponent className="h-6 w-6 text-white" />
+                </div>
+
+                <div className="flex-1">
+                  <div className="font-semibold text-white mb-1">
+                    {point.name}
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    {point.lat.toFixed(4)}, {point.lng.toFixed(4)}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`bg-gradient-to-r ${getPointColor(
+                      point.type
+                    )} text-white text-xs border-0 capitalize`}
+                  >
+                    {point.type}
+                  </Badge>
+                  {point.type === "waypoint" && (
+                    <Button
+                      onClick={() => removePoint(point.id)}
+                      className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30 hover:border-red-400/50"
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <Badge variant="outline" className="text-xs capitalize">
-                {point.type}
-              </Badge>
-              {point.type === "waypoint" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removePoint(point.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Add Waypoint */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Waypoint
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div ref={(el) => (cardsRef.current[1] = el)} className="dashboard-card">
+        <div className="flex items-center gap-3 mb-6">
+          <Plus className="h-6 w-6 text-cyan-400" />
+          <h3 className="text-xl font-semibold text-white">Add Waypoint</h3>
+        </div>
+
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="point-name">Location Name</Label>
+            <Label className="text-cyan-300 font-medium">Location Name</Label>
             <Input
-              id="point-name"
               placeholder="e.g., Research Station Alpha"
               value={newPoint.name}
               onChange={(e) =>
                 setNewPoint((prev) => ({ ...prev, name: e.target.value }))
               }
+              className="bg-slate-800/50 border-cyan-500/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="point-lat">Latitude</Label>
+              <Label className="text-cyan-300 font-medium">Latitude</Label>
               <Input
-                id="point-lat"
                 placeholder="e.g., 15.2993"
                 value={newPoint.lat}
                 onChange={(e) =>
                   setNewPoint((prev) => ({ ...prev, lat: e.target.value }))
                 }
+                className="bg-slate-800/50 border-cyan-500/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="point-lng">Longitude</Label>
+              <Label className="text-cyan-300 font-medium">Longitude</Label>
               <Input
-                id="point-lng"
                 placeholder="e.g., 74.1240"
                 value={newPoint.lng}
                 onChange={(e) =>
                   setNewPoint((prev) => ({ ...prev, lng: e.target.value }))
                 }
+                className="bg-slate-800/50 border-cyan-500/20 text-slate-200 placeholder-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
               />
             </div>
           </div>
-          <Button onClick={addWaypoint} className="w-full" size="sm">
+
+          <Button
+            onClick={addWaypoint}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Waypoint
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Route Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            Route Analysis
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Route Analysis */}
+      <div ref={(el) => (cardsRef.current[2] = el)} className="dashboard-card">
+        <div className="flex items-center gap-3 mb-6">
+          <Calculator className="h-6 w-6 text-cyan-400" />
+          <h3 className="text-xl font-semibold text-white">Route Analysis</h3>
+        </div>
+
+        <div className="space-y-6">
           <Button
             onClick={calculateDistance}
-            variant="outline"
-            className="w-full"
+            className="w-full bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50"
           >
             <Calculator className="h-4 w-4 mr-2" />
             Recalculate Route
           </Button>
 
-          <Separator />
+          <Separator className="border-cyan-500/20" />
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="text-center p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+              <div className="flex items-center justify-center gap-2 text-slate-400 mb-2">
                 <Ruler className="h-4 w-4" />
-                Distance
+                <span className="text-sm">Distance</span>
               </div>
-              <div className="font-semibold">
+              <div className="text-2xl font-bold text-cyan-400">
                 {routeStats.totalDistance.toFixed(1)} km
               </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="text-center p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+              <div className="flex items-center justify-center gap-2 text-slate-400 mb-2">
                 <Clock className="h-4 w-4" />
-                Est. Time
+                <span className="text-sm">Est. Time</span>
               </div>
-              <div className="font-semibold">{routeStats.estimatedTime}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {routeStats.estimatedTime}
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="text-center p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+              <div className="flex items-center justify-center gap-2 text-slate-400 mb-2">
                 <Navigation className="h-4 w-4" />
-                Avg. Speed
+                <span className="text-sm">Avg. Speed</span>
               </div>
-              <div className="font-semibold">{routeStats.averageSpeed}</div>
+              <div className="text-2xl font-bold text-purple-400">
+                {routeStats.averageSpeed}
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                Fuel Est.
+            <div className="text-center p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+              <div className="flex items-center justify-center gap-2 text-slate-400 mb-2">
+                <Activity className="h-4 w-4" />
+                <span className="text-sm">Fuel Est.</span>
               </div>
-              <div className="font-semibold">{routeStats.fuelConsumption}</div>
+              <div className="text-2xl font-bold text-green-400">
+                {routeStats.fuelConsumption}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Quick Routes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Common Routes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
+      <div ref={(el) => (cardsRef.current[3] = el)} className="dashboard-card">
+        <div className="flex items-center gap-3 mb-6">
+          <Route className="h-6 w-6 text-cyan-400" />
+          <h3 className="text-xl font-semibold text-white">Common Routes</h3>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            "Mumbai ↔ Goa Research Route",
+            "Chennai ↔ Andaman Islands",
+            "Kochi ↔ Lakshadweep Survey",
+          ].map((route, index) => (
             <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
+              key={index}
+              className="w-full justify-start bg-slate-700/50 hover:bg-slate-600/70 text-cyan-300 border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300"
             >
-              Mumbai ↔ Goa Research Route
+              <Navigation className="h-4 w-4 mr-3" />
+              {route}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              Chennai ↔ Andaman Islands
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              Kochi ↔ Lakshadweep Survey
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
