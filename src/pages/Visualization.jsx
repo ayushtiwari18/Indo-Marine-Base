@@ -376,6 +376,7 @@ const Visualization = () => {
                     <Globe className="h-6 w-6 text-cyan-400" />
                     Interactive Ocean Map
                   </h3>
+
                   <div className="flex items-center gap-3">
                     <Badge
                       className={`${
@@ -426,7 +427,17 @@ const Visualization = () => {
                     </Select>
                   </div>
                 </div>
+
                 <div className="rounded-xl overflow-hidden border border-cyan-500/20">
+                  <iframe
+                    src="https://public.tableau.com/views/Demo_17571681827350/Dashboard1?:showVizHome=no&:embed=true"
+                    style={{
+                      width: `${window.innerWidth}px`,
+                      height: "600px",
+                      border: "none",
+                      marginBottom: "100px",
+                    }}
+                  ></iframe>
                   <InteractiveMap
                     height="h-[600px]"
                     onMarkerClick={handleMarkerClick}

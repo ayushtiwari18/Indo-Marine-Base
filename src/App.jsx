@@ -59,7 +59,6 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
 
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
 
           {/* Information Pages */}
           <Route path="/about" element={<About />} />
@@ -73,6 +72,7 @@ const App = () => (
             <Route path="/visualization" element={<Visualization />} />
             <Route path="/ai-tools" element={<AITools />} />
             <Route path="/api-access" element={<APIAccess />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/outreach" element={<Outreach />} />
 
             {/* 404 Route */}
