@@ -22,10 +22,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            {/* <Route path="/" element={<Home />} /> */}
-            {/* <Route path="/" element={<Index />} /> */}
+        
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route element={<Layout />}>
             <Route path="/dashboard" element={<Home />} />
             <Route path="/datasets" element={<Datasets />} />
             <Route path="/visualization" element={<Visualization />} />
@@ -34,8 +34,8 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/outreach" element={<Outreach />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+          </Route>
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

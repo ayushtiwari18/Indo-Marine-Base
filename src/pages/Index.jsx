@@ -1,6 +1,6 @@
 import React from "react";
 import { OceanHeroSection } from "@/components/HeroSection/OceanHeroSection";
-import { PlatformHeroSection } from "@/components/HeroSection/PlatformHeroSection";
+import { PlatformSection } from "@/components/HeroSection/PlatformHeroSection";
 import MarineDataDashboard from "@/components/HeroSection/MarineDataDashboard";
 import ConservationImpact from "@/components/HeroSection/ConservationImpact";
 import MarineTimeline from "@/components/HeroSection/MarineTimeline";
@@ -10,7 +10,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <OceanHeroSection />
-      <PlatformHeroSection />
+      <PlatformSection />
       <MarineDataDashboard />
       <MarineTimeline />
       <MarineTestimonials />
