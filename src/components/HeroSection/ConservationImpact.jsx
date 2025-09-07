@@ -1,17 +1,41 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const ConservationImpact = () => {
   const stats = [
-    { number: "2M+", label: "Species Records", description: "Catalogued marine organisms" },
-    { number: "150+", label: "Research Partners", description: "Global institutions" },
+    {
+      number: "2M+",
+      label: "Species Records",
+      description: "Catalogued marine organisms",
+    },
+    {
+      number: "150+",
+      label: "Research Partners",
+      description: "Global institutions",
+    },
     { number: "45", label: "Countries", description: "Contributing data" },
-    { number: "99.2%", label: "Data Accuracy", description: "AI-verified insights" },
-    { number: "50TB", label: "Data Storage", description: "Oceanographic datasets" },
-    { number: "24/7", label: "Monitoring", description: "Real-time data collection" },
-    { number: "500+", label: "Publications", description: "Research papers supported" },
-    { number: "95%", label: "Uptime", description: "Platform reliability" }
+    {
+      number: "99.2%",
+      label: "Data Accuracy",
+      description: "AI-verified insights",
+    },
+    {
+      number: "50TB",
+      label: "Data Storage",
+      description: "Oceanographic datasets",
+    },
+    {
+      number: "24/7",
+      label: "Monitoring",
+      description: "Real-time data collection",
+    },
+    {
+      number: "500+",
+      label: "Publications",
+      description: "Research papers supported",
+    },
+    { number: "95%", label: "Uptime", description: "Platform reliability" },
   ];
 
   return (
@@ -22,15 +46,16 @@ const ConservationImpact = () => {
             Comprehensive Marine Intelligence
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Empowering researchers and policymakers with actionable marine biodiversity insights
+            Empowering researchers and policymakers with actionable marine
+            biodiversity insights
           </p>
         </div>
 
         {/* Impact Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {stats.map((stat, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="text-center bg-card/50 backdrop-blur-sm border-ocean-aqua/20 hover:bg-card/70 transition-all duration-300 transform hover:scale-105 animate-drift"
               style={{ animationDelay: `${index * 0.3}s` }}
             >
@@ -55,7 +80,8 @@ const ConservationImpact = () => {
             Advanced Marine Research Platform
           </h3>
           <p className="text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
-            Partner with CMLRE to advance marine biodiversity research through comprehensive data analytics and AI-driven insights.
+            Partner with CMLRE to advance marine biodiversity research through
+            comprehensive data analytics and AI-driven insights.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button className="btn-hero-primary">
