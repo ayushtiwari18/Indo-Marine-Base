@@ -10,7 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Copy, Play, Code2 } from "lucide-react";
+import {
+  Copy,
+  Play,
+  Code2,
+  CheckCircle,
+  Waves,
+  Shield,
+  Zap,
+  Globe,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const CodeExamples = () => {
@@ -258,20 +267,10 @@ class OceanVistaClient {
       throw error;
     }
   }
-
-  async searchSpecies(query, location) {
-    const params = { q: query };
-    if (location) params.location = location;
-    
-    const response = await this.client.get('/species/search', { params });
-    return response.data;
-  }
 }
 
 // Usage
 const api = new OceanVistaClient('YOUR_API_KEY');
-
-// Get datasets
 const datasets = await api.getDatasets({
   category: 'marine-biology',
   limit: 50
@@ -355,7 +354,17 @@ class OceanVistaAPI {
         $this->apiKey = $apiKey;
     }
     
-    private function makeRequest($endpoint, $method = 'GET', $data = null) {
+    public function getDatasets($category = null, $limit = 20) {
+        $params = ['limit' => $limit];
+        if ($category) {
+            $params['category'] = $category;
+        }
+        
+        $query = http_build_query($params);
+        return $this->makeRequest("/datasets?$query");
+    }
+    
+    private function makeRequest($endpoint) {
         $url = $this->baseUrl . $endpoint;
         
         $headers = [
@@ -369,12 +378,7 @@ class OceanVistaAPI {
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_CUSTOMREQUEST => $method
         ]);
-        
-        if ($data && $method !== 'GET') {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        }
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -386,30 +390,12 @@ class OceanVistaAPI {
         
         return json_decode($response, true);
     }
-    
-    public function getDatasets($category = null, $limit = 20) {
-        $params = ['limit' => $limit];
-        if ($category) {
-            $params['category'] = $category;
-        }
-        
-        $query = http_build_query($params);
-        return $this->makeRequest("/datasets?$query");
-    }
 }
 
 // Usage
-try {
-    $api = new OceanVistaAPI('YOUR_API_KEY');
-    $datasets = $api->getDatasets('oceanography', 10);
-    
-    echo "Found " . $datasets['total'] . " datasets\\n";
-    foreach ($datasets['results'] as $dataset) {
-        echo "- " . $dataset['title'] . "\\n";
-    }
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\\n";
-}
+$api = new OceanVistaAPI('YOUR_API_KEY');
+$datasets = $api->getDatasets('oceanography', 10);
+echo "Found " . $datasets['total'] . " datasets\\n";
 ?>`,
       species: `<?php
 
@@ -490,25 +476,14 @@ function analyzeMarineImage($apiKey, $imagePath, $analysisType = 'species_identi
 }
 
 // Usage
-try {
-    $result = analyzeMarineImage(
-        'YOUR_API_KEY',
-        '/path/to/marine_image.jpg',
-        'species_identification'
-    );
-    
-    echo "Analysis Results:\\n";
-    echo "Confidence: " . ($result['confidence'] * 100) . "%\\n";
-    
-    foreach ($result['predictions'] as $prediction) {
-        printf("- %s: %.1f%%\\n", 
-            $prediction['species'], 
-            $prediction['probability'] * 100
-        );
-    }
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\\n";
-}
+$result = analyzeMarineImage(
+    'YOUR_API_KEY',
+    '/path/to/marine_image.jpg',
+    'species_identification'
+);
+
+echo "Analysis Results:\\n";
+echo "Confidence: " . ($result['confidence'] * 100) . "%\\n";
 ?>`,
     },
     java: {
@@ -550,45 +525,16 @@ public class OceanVistaClient {
                 .uri(uri)
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
                 .GET()
                 .build();
                 
         HttpResponse<String> response = httpClient.send(request, 
                 HttpResponse.BodyHandlers.ofString());
                 
-        if (response.statusCode() >= 400) {
-            throw new RuntimeException("API Error: " + response.statusCode());
-        }
-        
         return objectMapper.readValue(response.body(), Map.class);
     }
-}
-
-// Usage
-public class MarineDataApp {
-    public static void main(String[] args) {
-        try {
-            OceanVistaClient client = new OceanVistaClient("YOUR_API_KEY");
-            Map<String, Object> datasets = client.getDatasets("marine-biology", 10);
-            
-            System.out.println("Total datasets: " + datasets.get("total"));
-            
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> results = 
-                    (List<Map<String, Object>>) datasets.get("results");
-                    
-            results.forEach(dataset -> 
-                System.out.println("- " + dataset.get("title"))
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }`,
-      species: `import java.util.concurrent.CompletableFuture;
-
-public class SpeciesSearchService {
+      species: `public class SpeciesSearchService {
     private final OceanVistaClient client;
     
     public SpeciesSearchService(String apiKey) {
@@ -622,25 +568,6 @@ public class SpeciesSearchService {
             }
         });
     }
-    
-    private Species mapToSpecies(Map<String, Object> data) {
-        return new Species(
-            (String) data.get("scientific_name"),
-            (String) data.get("common_name"),
-            (String) data.get("conservation_status"),
-            (List<String>) data.get("habitats")
-        );
-    }
-}
-
-// Species model class
-public class Species {
-    private final String scientificName;
-    private final String commonName;
-    private final String conservationStatus;
-    private final List<String> habitats;
-    
-    // Constructor and getters...
 }`,
       analyze: `import java.nio.file.Files;
 import java.nio.file.Path;
@@ -660,24 +587,11 @@ public class ImageAnalysisService {
         
         byte[] imageBytes = Files.readAllBytes(imagePath);
         
-        StringBuilder body = new StringBuilder();
-        body.append("--").append(boundary).append("\\r\\n");
-        body.append("Content-Disposition: form-data; name=\\"image\\"; ")
-            .append("filename=\\"").append(imagePath.getFileName()).append("\\"\\r\\n");
-        body.append("Content-Type: image/jpeg\\r\\n\\r\\n");
-        
-        // Add image bytes here (simplified for example)
-        
-        body.append("\\r\\n--").append(boundary).append("\\r\\n");
-        body.append("Content-Disposition: form-data; name=\\"analysis_type\\"\\r\\n\\r\\n");
-        body.append(analysisType.getValue());
-        body.append("\\r\\n--").append(boundary).append("--\\r\\n");
-        
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(client.getBaseUrl() + "/analyze/image"))
                 .header("Authorization", "Bearer " + client.getApiKey())
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                .POST(HttpRequest.BodyPublishers.ofString(buildMultipartBody()))
                 .build();
                 
         HttpResponse<String> response = client.getHttpClient()
@@ -685,22 +599,6 @@ public class ImageAnalysisService {
                 
         return client.getObjectMapper()
                 .readValue(response.body(), AnalysisResult.class);
-    }
-}
-
-public enum AnalysisType {
-    SPECIES_IDENTIFICATION("species_identification"),
-    HABITAT_ANALYSIS("habitat_analysis"),
-    HEALTH_ASSESSMENT("health_assessment");
-    
-    private final String value;
-    
-    AnalysisType(String value) {
-        this.value = value;
-    }
-    
-    public String getValue() {
-        return value;
     }
 }`,
     },
@@ -723,22 +621,6 @@ type OceanVistaClient struct {
     HTTPClient *http.Client
 }
 
-type Dataset struct {
-    ID          string    \`json:"id"\`
-    Title       string    \`json:"title"\`
-    Description string    \`json:"description"\`
-    Category    string    \`json:"category"\`
-    CreatedAt   time.Time \`json:"created_at"\`
-    UpdatedAt   time.Time \`json:"updated_at"\`
-}
-
-type DatasetsResponse struct {
-    Results []Dataset \`json:"results"\`
-    Total   int       \`json:"total"\`
-    Page    int       \`json:"page"\`
-    PerPage int       \`json:"per_page"\`
-}
-
 func NewOceanVistaClient(apiKey string) *OceanVistaClient {
     return &OceanVistaClient{
         BaseURL: "https://api.oceanvista.gov.in/v2",
@@ -752,7 +634,6 @@ func NewOceanVistaClient(apiKey string) *OceanVistaClient {
 func (c *OceanVistaClient) GetDatasets(category string, limit int) (*DatasetsResponse, error) {
     endpoint := "/datasets"
     
-    // Build query parameters
     params := url.Values{}
     params.Add("limit", fmt.Sprintf("%d", limit))
     if category != "" {
@@ -768,7 +649,6 @@ func (c *OceanVistaClient) GetDatasets(category string, limit int) (*DatasetsRes
     
     req.Header.Set("Authorization", "Bearer "+c.APIKey)
     req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("Accept", "application/json")
     
     resp, err := c.HTTPClient.Do(req)
     if err != nil {
@@ -776,61 +656,14 @@ func (c *OceanVistaClient) GetDatasets(category string, limit int) (*DatasetsRes
     }
     defer resp.Body.Close()
     
-    if resp.StatusCode >= 400 {
-        return nil, fmt.Errorf("API error: %d", resp.StatusCode)
-    }
-    
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, err
-    }
-    
     var datasets DatasetsResponse
-    if err := json.Unmarshal(body, &datasets); err != nil {
+    if err := json.NewDecoder(resp.Body).Decode(&datasets); err != nil {
         return nil, err
     }
     
     return &datasets, nil
-}
-
-func main() {
-    client := NewOceanVistaClient("YOUR_API_KEY")
-    
-    datasets, err := client.GetDatasets("marine-biology", 10)
-    if err != nil {
-        fmt.Printf("Error: %v\\n", err)
-        return
-    }
-    
-    fmt.Printf("Found %d datasets:\\n", datasets.Total)
-    for _, dataset := range datasets.Results {
-        fmt.Printf("- %s (%s)\\n", dataset.Title, dataset.Category)
-    }
 }`,
-      species: `package main
-
-import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "sync"
-)
-
-type Species struct {
-    ScientificName      string   \`json:"scientific_name"\`
-    CommonName         string   \`json:"common_name"\`
-    ConservationStatus string   \`json:"conservation_status"\`
-    Habitats          []string \`json:"habitats"\`
-    Location          string   \`json:"location"\`
-}
-
-type SpeciesSearchResponse struct {
-    Results []Species \`json:"results"\`
-    Total   int       \`json:"total"\`
-    Query   string    \`json:"query"\`
-}
-
-func (c *OceanVistaClient) SearchSpecies(ctx context.Context, query, location string) (*SpeciesSearchResponse, error) {
+      species: `func (c *OceanVistaClient) SearchSpecies(ctx context.Context, query, location string) (*SpeciesSearchResponse, error) {
     endpoint := "/species/search"
     
     params := url.Values{}
@@ -855,113 +688,14 @@ func (c *OceanVistaClient) SearchSpecies(ctx context.Context, query, location st
     }
     defer resp.Body.Close()
     
-    if resp.StatusCode >= 400 {
-        return nil, fmt.Errorf("API error: %d", resp.StatusCode)
-    }
-    
     var searchResult SpeciesSearchResponse
     if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
         return nil, err
     }
     
     return &searchResult, nil
-}
-
-// Concurrent species search
-func (c *OceanVistaClient) SearchMultipleSpecies(queries []string) map[string]*SpeciesSearchResponse {
-    results := make(map[string]*SpeciesSearchResponse)
-    var mu sync.Mutex
-    var wg sync.WaitGroup
-    
-    for _, query := range queries {
-        wg.Add(1)
-        go func(q string) {
-            defer wg.Done()
-            
-            ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-            defer cancel()
-            
-            result, err := c.SearchSpecies(ctx, q, "")
-            
-            mu.Lock()
-            if err != nil {
-                fmt.Printf("Error searching for %s: %v\\n", q, err)
-            } else {
-                results[q] = result
-            }
-            mu.Unlock()
-        }(query)
-    }
-    
-    wg.Wait()
-    return results
-}
-
-func main() {
-    client := NewOceanVistaClient("YOUR_API_KEY")
-    
-    // Single search
-    species, err := client.SearchSpecies(
-        context.Background(), 
-        "great white shark", 
-        "pacific ocean"
-    )
-    if err != nil {
-        fmt.Printf("Error: %v\\n", err)
-        return
-    }
-    
-    fmt.Printf("Found %d species for query '%s':\\n", species.Total, species.Query)
-    for _, s := range species.Results {
-        fmt.Printf("- %s (%s) - Status: %s\\n", 
-            s.CommonName, s.ScientificName, s.ConservationStatus)
-    }
-    
-    // Multiple concurrent searches
-    queries := []string{"dolphin", "whale", "shark", "turtle"}
-    results := client.SearchMultipleSpecies(queries)
-    
-    fmt.Printf("\\nConcurrent search results:\\n")
-    for query, result := range results {
-        fmt.Printf("%s: %d results\\n", query, result.Total)
-    }
 }`,
-      analyze: `package main
-
-import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "fmt"
-    "io"
-    "mime/multipart"
-    "net/http"
-    "os"
-    "path/filepath"
-    "time"
-)
-
-type AnalysisResult struct {
-    Confidence   float64      \`json:"confidence"\`
-    Predictions  []Prediction \`json:"predictions"\`
-    AnalysisType string       \`json:"analysis_type"\`
-    ProcessedAt  time.Time    \`json:"processed_at"\`
-}
-
-type Prediction struct {
-    Species     string  \`json:"species"\`
-    Probability float64 \`json:"probability"\`
-    BoundingBox *Box    \`json:"bounding_box,omitempty"\`
-}
-
-type Box struct {
-    X      int \`json:"x"\`
-    Y      int \`json:"y"\`
-    Width  int \`json:"width"\`
-    Height int \`json:"height"\`
-}
-
-func (c *OceanVistaClient) AnalyzeImage(ctx context.Context, imagePath, analysisType string) (*AnalysisResult, error) {
+      analyze: `func (c *OceanVistaClient) AnalyzeImage(ctx context.Context, imagePath, analysisType string) (*AnalysisResult, error) {
     file, err := os.Open(imagePath)
     if err != nil {
         return nil, fmt.Errorf("failed to open image: %w", err)
@@ -971,7 +705,6 @@ func (c *OceanVistaClient) AnalyzeImage(ctx context.Context, imagePath, analysis
     var body bytes.Buffer
     writer := multipart.NewWriter(&body)
     
-    // Add image file
     part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
     if err != nil {
         return nil, err
@@ -981,7 +714,6 @@ func (c *OceanVistaClient) AnalyzeImage(ctx context.Context, imagePath, analysis
         return nil, err
     }
     
-    // Add analysis type
     if err := writer.WriteField("analysis_type", analysisType); err != nil {
         return nil, err
     }
@@ -1003,86 +735,12 @@ func (c *OceanVistaClient) AnalyzeImage(ctx context.Context, imagePath, analysis
     }
     defer resp.Body.Close()
     
-    if resp.StatusCode >= 400 {
-        return nil, fmt.Errorf("API error: %d", resp.StatusCode)
-    }
-    
     var result AnalysisResult
     if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
         return nil, err
     }
     
     return &result, nil
-}
-
-// Batch image analysis
-func (c *OceanVistaClient) AnalyzeImageBatch(imagePaths []string, analysisType string) map[string]*AnalysisResult {
-    results := make(map[string]*AnalysisResult)
-    var mu sync.Mutex
-    var wg sync.WaitGroup
-    
-    // Limit concurrent requests
-    semaphore := make(chan struct{}, 3)
-    
-    for _, path := range imagePaths {
-        wg.Add(1)
-        go func(imagePath string) {
-            defer wg.Done()
-            
-            semaphore <- struct{}{} // Acquire
-            defer func() { <-semaphore }() // Release
-            
-            ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-            defer cancel()
-            
-            result, err := c.AnalyzeImage(ctx, imagePath, analysisType)
-            
-            mu.Lock()
-            if err != nil {
-                fmt.Printf("Error analyzing %s: %v\\n", imagePath, err)
-            } else {
-                results[imagePath] = result
-            }
-            mu.Unlock()
-        }(path)
-    }
-    
-    wg.Wait()
-    return results
-}
-
-func main() {
-    client := NewOceanVistaClient("YOUR_API_KEY")
-    
-    // Single image analysis
-    result, err := client.AnalyzeImage(
-        context.Background(),
-        "/path/to/marine_image.jpg",
-        "species_identification"
-    )
-    if err != nil {
-        fmt.Printf("Error: %v\\n", err)
-        return
-    }
-    
-    fmt.Printf("Analysis Results:\\n")
-    fmt.Printf("Confidence: %.2f%%\\n", result.Confidence*100)
-    fmt.Printf("Analysis Type: %s\\n", result.AnalysisType)
-    
-    for i, pred := range result.Predictions {
-        fmt.Printf("Prediction %d: %s (%.2f%%)\\n", 
-            i+1, pred.Species, pred.Probability*100)
-    }
-    
-    // Batch analysis
-    imagePaths := []string{
-        "/path/to/image1.jpg",
-        "/path/to/image2.jpg",
-        "/path/to/image3.jpg",
-    }
-    
-    batchResults := client.AnalyzeImageBatch(imagePaths, "species_identification")
-    fmt.Printf("\\nBatch analysis completed: %d images processed\\n", len(batchResults))
 }`,
     },
     ruby: {
@@ -1108,16 +766,6 @@ class OceanVistaClient
     make_request(uri, Net::HTTP::Get)
   end
   
-  def search_species(query, location: nil)
-    params = { q: query }
-    params[:location] = location if location
-    
-    uri = URI("#{BASE_URL}/species/search")
-    uri.query = URI.encode_www_form(params)
-    
-    make_request(uri, Net::HTTP::Get)
-  end
-  
   private
   
   def make_request(uri, request_class)
@@ -1127,251 +775,62 @@ class OceanVistaClient
     request = request_class.new(uri)
     request['Authorization'] = "Bearer #{@api_key}"
     request['Content-Type'] = 'application/json'
-    request['Accept'] = 'application/json'
     
     response = http.request(request)
-    
-    unless response.is_a?(Net::HTTPSuccess)
-      raise "API Error: #{response.code} #{response.message}"
-    end
-    
     JSON.parse(response.body)
   end
 end
 
 # Usage
 client = OceanVistaClient.new('YOUR_API_KEY')
-
-begin
-  datasets = client.get_datasets(category: 'marine-biology', limit: 10)
-  puts "Found #{datasets['total']} datasets"
+datasets = client.get_datasets(category: 'marine-biology')`,
+      species: `def find_endangered_species(location)
+  all_species = @client.search_species('', location: location)
   
-  datasets['results'].each do |dataset|
-    puts "- #{dataset['title']} (#{dataset['category']})"
+  endangered = all_species['results'].select do |species|
+    %w[endangered critically_endangered vulnerable].include?(
+      species['conservation_status']&.downcase
+    )
   end
   
-  # Search for species
-  species = client.search_species('dolphin', location: 'atlantic ocean')
-  puts "\\nSpecies search results:"
-  
-  species['results'].each do |result|
-    puts "- #{result['common_name']} (#{result['scientific_name']})"
-    puts "  Status: #{result['conservation_status']}"
-  end
-  
-rescue => e
-  puts "Error: #{e.message}"
-end`,
-      species: `class MarineSpeciesService
-  def initialize(client)
-    @client = client
-  end
-  
-  def find_endangered_species(location)
-    all_species = @client.search_species('', location: location)
-    
-    endangered = all_species['results'].select do |species|
-      %w[endangered critically_endangered vulnerable].include?(
-        species['conservation_status']&.downcase
-      )
-    end
-    
-    group_by_status(endangered)
-  end
-  
-  def species_by_habitat(habitat_type)
-    species_data = @client.search_species(habitat_type)
-    
-    species_data['results'].group_by { |s| s['habitats'] }
-  end
-  
-  def compare_species_populations(*species_names)
-    results = {}
-    
-    species_names.each do |name|
-      data = @client.search_species(name)
-      if data['results'].any?
-        species = data['results'].first
-        results[name] = {
-          scientific_name: species['scientific_name'],
-          status: species['conservation_status'],
-          population_trend: species['population_trend'],
-          habitats: species['habitats']
-        }
-      end
-    end
-    
-    results
-  end
-  
-  private
-  
-  def group_by_status(species_list)
-    species_list.group_by { |s| s['conservation_status'] }
-  end
+  group_by_status(endangered)
 end
 
 # Usage
 client = OceanVistaClient.new('YOUR_API_KEY')
-service = MarineSpeciesService.new(client)
-
-# Find endangered species in the Pacific
-endangered = service.find_endangered_species('pacific ocean')
-puts "Endangered species in Pacific Ocean:"
+endangered = find_endangered_species('pacific ocean')
 
 endangered.each do |status, species_list|
-  puts "\\n#{status.upcase}:"
+  puts "#{status.upcase}:"
   species_list.each do |species|
-    puts "  - #{species['common_name']} (#{species['scientific_name']})"
+    puts "  - #{species['common_name']}"
   end
-end
-
-# Compare whale populations
-whales = service.compare_species_populations(
-  'blue whale',
-  'humpback whale', 
-  'right whale'
-)
-
-puts "\\nWhale Population Comparison:"
-whales.each do |name, data|
-  puts "#{name.capitalize}:"
-  puts "  Scientific: #{data[:scientific_name]}"
-  puts "  Status: #{data[:status]}"
-  puts "  Trend: #{data[:population_trend]}"
 end`,
       analyze: `require 'net/http/post/multipart'
 
-class ImageAnalysisService
-  def initialize(client)
-    @client = client
-  end
+def analyze_image(image_path, analysis_type: 'species_identification')
+  uri = URI("#{BASE_URL}/analyze/image")
   
-  def analyze_image(image_path, analysis_type: 'species_identification')
-    uri = URI("#{@client.class::BASE_URL}/analyze/image")
+  File.open(image_path, 'rb') do |image_file|
+    request = Net::HTTP::Post::Multipart.new(
+      uri.path,
+      'image' => UploadIO.new(image_file, 'image/jpeg', File.basename(image_path)),
+      'analysis_type' => analysis_type
+    )
     
-    File.open(image_path, 'rb') do |image_file|
-      request = Net::HTTP::Post::Multipart.new(
-        uri.path,
-        'image' => UploadIO.new(image_file, 'image/jpeg', File.basename(image_path)),
-        'analysis_type' => analysis_type
-      )
-      
-      request['Authorization'] = "Bearer #{@client.instance_variable_get(:@api_key)}"
-      
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      
-      response = http.request(request)
-      
-      unless response.is_a?(Net::HTTPSuccess)
-        raise "Analysis failed: #{response.code} #{response.message}"
-      end
-      
-      JSON.parse(response.body)
-    end
-  end
-  
-  def batch_analyze_images(image_paths, analysis_type: 'species_identification')
-    results = {}
-    threads = []
+    request['Authorization'] = "Bearer #{@api_key}"
     
-    image_paths.each do |path|
-      threads << Thread.new(path) do |image_path|
-        begin
-          result = analyze_image(image_path, analysis_type: analysis_type)
-          Thread.current[:result] = { image_path => result }
-        rescue => e
-          Thread.current[:error] = { image_path => e.message }
-        end
-      end
-    end
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
     
-    threads.each do |thread|
-      thread.join
-      results.merge!(thread[:result]) if thread[:result]
-      puts "Error: #{thread[:error]}" if thread[:error]
-    end
-    
-    results
-  end
-  
-  def analyze_and_classify(image_path)
-    result = analyze_image(image_path)
-    
-    classification = {
-      primary_species: result['predictions'].first,
-      confidence_level: categorize_confidence(result['confidence']),
-      all_predictions: result['predictions'],
-      analysis_metadata: {
-        processed_at: result['processed_at'],
-        analysis_type: result['analysis_type']
-      }
-    }
-    
-    add_species_information(classification)
-  end
-  
-  private
-  
-  def categorize_confidence(confidence)
-    case confidence
-    when 0.9..1.0 then 'very_high'
-    when 0.8..0.9 then 'high'
-    when 0.6..0.8 then 'medium'
-    when 0.4..0.6 then 'low'
-    else 'very_low'
-    end
-  end
-  
-  def add_species_information(classification)
-    primary = classification[:primary_species]
-    
-    if primary && primary['species']
-      species_info = @client.search_species(primary['species'])
-      if species_info['results'].any?
-        classification[:species_details] = species_info['results'].first
-      end
-    end
-    
-    classification
+    response = http.request(request)
+    JSON.parse(response.body)
   end
 end
 
 # Usage
-client = OceanVistaClient.new('YOUR_API_KEY')
-analyzer = ImageAnalysisService.new(client)
-
-begin
-  # Single image analysis
-  result = analyzer.analyze_and_classify('/path/to/marine_image.jpg')
-  
-  puts "Image Analysis Results:"
-  puts "Primary Species: #{result[:primary_species]['species']}"
-  puts "Confidence: #{result[:confidence_level]} (#{(result[:primary_species]['probability'] * 100).round(1)}%)"
-  
-  if result[:species_details]
-    details = result[:species_details]
-    puts "\\nSpecies Information:"
-    puts "Scientific Name: #{details['scientific_name']}"
-    puts "Conservation Status: #{details['conservation_status']}"
-    puts "Habitats: #{details['habitats'].join(', ')}"
-  end
-  
-  # Batch analysis
-  image_paths = Dir['/path/to/images/*.jpg']
-  batch_results = analyzer.batch_analyze_images(image_paths)
-  
-  puts "\\nBatch Analysis Summary:"
-  batch_results.each do |path, analysis|
-    species = analysis['predictions'].first['species']
-    confidence = (analysis['predictions'].first['probability'] * 100).round(1)
-    puts "#{File.basename(path)}: #{species} (#{confidence}%)"
-  end
-  
-rescue => e
-  puts "Error: #{e.message}"
-end`,
+result = analyze_image('/path/to/marine_image.jpg')
+puts "Confidence: #{(result['confidence'] * 100).round(1)}%"`,
     },
   };
 
@@ -1379,21 +838,26 @@ end`,
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 className="text-2xl font-bold mb-2 text-slate-100 flex items-center gap-2">
+            <Code2 className="h-6 w-6 text-cyan-400" />
             Code Examples & Integration
           </h2>
-          <p className="text-slate-600">
+          <p className="text-slate-400">
             Ready-to-use code snippets in popular programming languages
           </p>
         </div>
         <div className="flex gap-2">
           <Select value={selectedEndpoint} onValueChange={setSelectedEndpoint}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 bg-slate-700/30 border-slate-600/30 text-slate-200 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-slate-800 border-slate-600">
               {Object.entries(endpoints).map(([key, endpoint]) => (
-                <SelectItem key={key} value={key}>
+                <SelectItem
+                  key={key}
+                  value={key}
+                  className="text-slate-200 focus:bg-slate-700 focus:text-cyan-400"
+                >
                   {endpoint.name}
                 </SelectItem>
               ))}
@@ -1403,26 +867,28 @@ end`,
       </div>
 
       <Tabs defaultValue="javascript" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-white shadow-sm">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-1 shadow-xl">
           {Object.entries(codeExamples).map(([language, examples]) => (
             <TabsTrigger
               key={language}
               value={language}
-              className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-xs lg:text-sm"
+              className="flex items-center space-x-1 px-2 py-2 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 text-xs lg:text-sm"
             >
-              <span className="mr-1">{examples.icon}</span>
-              {language.charAt(0).toUpperCase() + language.slice(1)}
+              <span className="text-sm">{examples.icon}</span>
+              <span className="hidden sm:inline">
+                {language.charAt(0).toUpperCase() + language.slice(1)}
+              </span>
             </TabsTrigger>
           ))}
         </TabsList>
 
         {Object.entries(codeExamples).map(([language, examples]) => (
           <TabsContent key={language} value={language} className="mt-6">
-            <Card className="shadow-lg border-0">
-              <CardHeader className="border-b bg-slate-50">
+            <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl">
+              <CardHeader className="border-b border-slate-700/30 bg-slate-800/20">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Code2 className="h-5 w-5 text-blue-500" />
+                  <CardTitle className="flex items-center gap-2 text-slate-100">
+                    <Code2 className="h-5 w-5 text-cyan-400" />
                     {language.charAt(0).toUpperCase() +
                       language.slice(1)} - {endpoints[selectedEndpoint].name}
                   </CardTitle>
@@ -1431,8 +897,8 @@ end`,
                       variant="outline"
                       className={
                         endpoints[selectedEndpoint].method === "GET"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-blue-50 text-blue-700"
+                          ? "border-green-500/30 text-green-400 bg-green-500/10"
+                          : "border-blue-500/30 text-blue-400 bg-blue-500/10"
                       }
                     >
                       {endpoints[selectedEndpoint].method}
@@ -1443,10 +909,10 @@ end`,
                       onClick={() =>
                         copyToClipboard(examples[selectedEndpoint])
                       }
-                      className="px-3"
+                      className="px-3 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
                     >
                       {copied ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-4 w-4 text-green-400" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
@@ -1457,7 +923,7 @@ end`,
               </CardHeader>
               <CardContent className="p-0">
                 <div className="relative">
-                  <pre className="p-6 text-sm overflow-x-auto bg-slate-900 text-slate-100 rounded-b-lg">
+                  <pre className="p-6 text-sm overflow-x-auto bg-slate-900 text-slate-100 rounded-b-lg border-t border-slate-700/30 max-h-96">
                     <code>{examples[selectedEndpoint]}</code>
                   </pre>
                 </div>
@@ -1468,15 +934,21 @@ end`,
       </Tabs>
 
       {/* Integration Guide */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <Card className="bg-gradient-to-br from-slate-800/50 to-cyan-900/20 backdrop-blur-sm border border-cyan-500/20 shadow-2xl">
         <CardHeader>
-          <CardTitle>Integration Best Practices</CardTitle>
+          <CardTitle className="text-slate-100 flex items-center gap-2">
+            <Waves className="h-5 w-5 text-cyan-400" />
+            Integration Best Practices
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-3">
-              <h4 className="font-semibold text-blue-700">🔐 Authentication</h4>
-              <ul className="text-sm space-y-1 text-slate-600">
+              <h4 className="font-semibold text-cyan-300 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Authentication
+              </h4>
+              <ul className="text-sm space-y-1 text-slate-400">
                 <li>• Always use HTTPS in production</li>
                 <li>• Store API keys securely</li>
                 <li>• Implement token refresh logic</li>
@@ -1484,8 +956,11 @@ end`,
               </ul>
             </div>
             <div className="space-y-3">
-              <h4 className="font-semibold text-green-700">⚡ Performance</h4>
-              <ul className="text-sm space-y-1 text-slate-600">
+              <h4 className="font-semibold text-green-300 flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Performance
+              </h4>
+              <ul className="text-sm space-y-1 text-slate-400">
                 <li>• Implement request caching</li>
                 <li>• Use connection pooling</li>
                 <li>• Handle rate limits gracefully</li>
@@ -1493,10 +968,11 @@ end`,
               </ul>
             </div>
             <div className="space-y-3">
-              <h4 className="font-semibold text-purple-700">
-                🛡️ Error Handling
+              <h4 className="font-semibold text-purple-300 flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Error Handling
               </h4>
-              <ul className="text-sm space-y-1 text-slate-600">
+              <ul className="text-sm space-y-1 text-slate-400">
                 <li>• Implement retry logic</li>
                 <li>• Log API errors properly</li>
                 <li>• Validate responses</li>

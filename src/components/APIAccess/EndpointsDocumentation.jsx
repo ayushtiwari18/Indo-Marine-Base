@@ -18,6 +18,10 @@ import {
   ChevronRight,
   AlertCircle,
   CheckCircle,
+  Waves,
+  Globe,
+  Activity,
+  Shield,
 } from "lucide-react";
 
 export const EndpointsDocumentation = () => {
@@ -524,41 +528,44 @@ export const EndpointsDocumentation = () => {
 
   const getMethodColor = (method) => {
     const colors = {
-      GET: "bg-green-500",
-      POST: "bg-blue-500",
-      PUT: "bg-yellow-500",
-      DELETE: "bg-red-500",
-      PATCH: "bg-purple-500",
+      GET: "bg-gradient-to-r from-green-500 to-emerald-500",
+      POST: "bg-gradient-to-r from-blue-500 to-cyan-500",
+      PUT: "bg-gradient-to-r from-yellow-500 to-orange-500",
+      DELETE: "bg-gradient-to-r from-red-500 to-pink-500",
+      PATCH: "bg-gradient-to-r from-purple-500 to-violet-500",
     };
-    return colors[method] || "bg-gray-500";
+    return colors[method] || "bg-gradient-to-r from-gray-500 to-slate-500";
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      200: "text-green-600",
-      201: "text-green-600",
-      400: "text-yellow-600",
-      401: "text-red-600",
-      403: "text-red-600",
-      404: "text-red-600",
-      429: "text-orange-600",
-      500: "text-red-600",
+      200: "text-green-400",
+      201: "text-green-400",
+      400: "text-yellow-400",
+      401: "text-red-400",
+      403: "text-red-400",
+      404: "text-red-400",
+      429: "text-orange-400",
+      500: "text-red-400",
     };
-    return colors[status] || "text-gray-600";
+    return colors[status] || "text-slate-400";
   };
 
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-2xl font-bold">API Endpoints Documentation</h2>
-        <p className="text-slate-600">
+        <h2 className="text-2xl font-bold text-slate-100 flex items-center justify-center gap-2">
+          <Database className="h-6 w-6 text-cyan-400" />
+          API Endpoints Documentation
+        </h2>
+        <p className="text-slate-400">
           Comprehensive documentation for all available API endpoints with
           examples and parameters
         </p>
       </div>
 
       {/* Search and Filter */}
-      <Card className="shadow-lg border-0">
+      <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -568,7 +575,7 @@ export const EndpointsDocumentation = () => {
                   placeholder="Search endpoints, paths, or descriptions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-slate-700/30 border-slate-600/30 text-slate-200 placeholder:text-slate-500 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
                 />
               </div>
             </div>
@@ -581,7 +588,11 @@ export const EndpointsDocumentation = () => {
                   }
                   size="sm"
                   onClick={() => setSelectedCategory(category.id)}
-                  className="whitespace-nowrap"
+                  className={`whitespace-nowrap transition-all duration-300 ${
+                    selectedCategory === category.id
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg hover:shadow-cyan-500/25"
+                      : "border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50"
+                  }`}
                 >
                   {category.name} ({category.count})
                 </Button>
@@ -596,10 +607,10 @@ export const EndpointsDocumentation = () => {
         {filteredEndpoints.map((endpoint) => (
           <Card
             key={endpoint.id}
-            className="shadow-lg border-0 overflow-hidden"
+            className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl overflow-hidden hover:shadow-cyan-500/10 transition-all duration-300"
           >
             <CardHeader
-              className="cursor-pointer hover:bg-slate-50 transition-colors"
+              className="cursor-pointer hover:bg-slate-700/20 transition-colors"
               onClick={() => toggleEndpoint(endpoint.id)}
             >
               <div className="flex items-center justify-between">
@@ -607,28 +618,36 @@ export const EndpointsDocumentation = () => {
                   <Badge
                     className={`${getMethodColor(
                       endpoint.method
-                    )} text-white font-mono`}
+                    )} text-white font-mono shadow-lg`}
                   >
                     {endpoint.method}
                   </Badge>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{endpoint.name}</h3>
-                    <code className="text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                    <h3 className="font-semibold text-lg text-slate-100">
+                      {endpoint.name}
+                    </h3>
+                    <code className="text-sm text-slate-300 bg-slate-800/50 border border-slate-600/30 px-2 py-1 rounded">
                       {endpoint.path}
                     </code>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {endpoint.auth_required && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                    >
                       Auth Required
                     </Badge>
                   )}
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-slate-600/30 text-slate-400"
+                  >
                     {endpoint.rate_limit}
                   </Badge>
                   {expandedEndpoint === endpoint.id ? (
-                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                    <ChevronDown className="h-5 w-5 text-cyan-400" />
                   ) : (
                     <ChevronRight className="h-5 w-5 text-slate-400" />
                   )}
@@ -637,19 +656,36 @@ export const EndpointsDocumentation = () => {
             </CardHeader>
 
             {expandedEndpoint === endpoint.id && (
-              <CardContent className="border-t bg-slate-50">
+              <CardContent className="border-t border-slate-700/30 bg-slate-800/20">
                 <div className="space-y-6 py-6">
                   {/* Description */}
                   <div>
-                    <h4 className="font-semibold mb-2">Description</h4>
-                    <p className="text-slate-700">{endpoint.description}</p>
+                    <h4 className="font-semibold mb-2 text-slate-200">
+                      Description
+                    </h4>
+                    <p className="text-slate-400">{endpoint.description}</p>
                   </div>
 
                   <Tabs defaultValue="parameters" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="parameters">Parameters</TabsTrigger>
-                      <TabsTrigger value="responses">Responses</TabsTrigger>
-                      <TabsTrigger value="examples">Examples</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3 bg-slate-700/30 border border-slate-600/30">
+                      <TabsTrigger
+                        value="parameters"
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300"
+                      >
+                        Parameters
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="responses"
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300"
+                      >
+                        Responses
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="examples"
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300"
+                      >
+                        Examples
+                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="parameters" className="space-y-4">
@@ -658,48 +694,56 @@ export const EndpointsDocumentation = () => {
                           {endpoint.parameters.map((param, index) => (
                             <div
                               key={index}
-                              className="p-4 bg-white rounded-lg border"
+                              className="p-4 bg-slate-700/30 border border-slate-600/20 rounded-lg hover:bg-slate-700/50 transition-colors duration-300"
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <code className="font-mono text-sm bg-slate-100 px-2 py-1 rounded">
+                                <code className="font-mono text-sm bg-slate-800/50 text-cyan-300 px-2 py-1 rounded border border-slate-600/30">
                                   {param.name}
                                 </code>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/10"
+                                >
                                   {param.type}
                                 </Badge>
                                 {param.required ? (
-                                  <Badge
-                                    variant="destructive"
-                                    className="text-xs"
-                                  >
+                                  <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                                     Required
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-slate-600/30 text-slate-400"
+                                  >
                                     Optional
                                   </Badge>
                                 )}
-                                <Badge variant="outline" className="text-xs">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-purple-500/30 text-purple-400 bg-purple-500/10"
+                                >
                                   {param.in}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-slate-600 mb-2">
+                              <p className="text-sm text-slate-300 mb-2">
                                 {param.description}
                               </p>
                               {param.enum && (
                                 <div className="text-xs">
-                                  <span className="font-medium">
+                                  <span className="font-medium text-slate-200">
                                     Allowed values:{" "}
                                   </span>
-                                  <code className="bg-slate-100 px-1 rounded">
+                                  <code className="bg-slate-800/50 text-cyan-300 px-1 rounded border border-slate-600/30">
                                     {param.enum.join(", ")}
                                   </code>
                                 </div>
                               )}
                               {param.default !== undefined && (
                                 <div className="text-xs">
-                                  <span className="font-medium">Default: </span>
-                                  <code className="bg-slate-100 px-1 rounded">
+                                  <span className="font-medium text-slate-200">
+                                    Default:{" "}
+                                  </span>
+                                  <code className="bg-slate-800/50 text-cyan-300 px-1 rounded border border-slate-600/30">
                                     {param.default}
                                   </code>
                                 </div>
@@ -709,8 +753,10 @@ export const EndpointsDocumentation = () => {
                         </div>
                       ) : (
                         <div className="text-center p-8 text-slate-500">
-                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>No parameters required for this endpoint</p>
+                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50 text-cyan-400/30" />
+                          <p className="text-slate-400">
+                            No parameters required for this endpoint
+                          </p>
                         </div>
                       )}
                     </TabsContent>
@@ -721,26 +767,26 @@ export const EndpointsDocumentation = () => {
                           ([status, response]) => (
                             <div
                               key={status}
-                              className="p-4 bg-white rounded-lg border"
+                              className="p-4 bg-slate-700/30 border border-slate-600/20 rounded-lg hover:bg-slate-700/50 transition-colors duration-300"
                             >
                               <div className="flex items-center gap-2 mb-3">
                                 <Badge
                                   className={`${getStatusColor(
                                     status
-                                  )} bg-transparent border`}
+                                  )} bg-transparent border border-current`}
                                 >
                                   {status}
                                 </Badge>
-                                <span className="font-medium">
+                                <span className="font-medium text-slate-200">
                                   {response.description}
                                 </span>
                               </div>
                               {response.example && (
                                 <div>
-                                  <Label className="text-sm font-medium mb-2 block">
+                                  <Label className="text-sm font-medium mb-2 block text-slate-200">
                                     Example Response:
                                   </Label>
-                                  <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                                  <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto border border-slate-700/30 max-h-96">
                                     {response.example}
                                   </pre>
                                 </div>
@@ -753,32 +799,42 @@ export const EndpointsDocumentation = () => {
 
                     <TabsContent value="examples" className="space-y-4">
                       <div className="grid gap-4">
-                        <div className="p-4 bg-white rounded-lg border">
+                        <div className="p-4 bg-slate-700/30 border border-slate-600/20 rounded-lg">
                           <div className="flex items-center justify-between mb-3">
-                            <Label className="font-medium">cURL Example</Label>
-                            <Button size="sm" variant="outline">
+                            <Label className="font-medium text-slate-200">
+                              cURL Example
+                            </Label>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+                            >
                               <Copy className="h-4 w-4 mr-1" />
                               Copy
                             </Button>
                           </div>
-                          <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                          <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto border border-slate-700/30">
                             {endpoint.method === "GET"
-                              ? `curl -X GET "${window.location.origin}${endpoint.path}" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json"`
-                              : `curl -X ${endpoint.method} "${window.location.origin}${endpoint.path}" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"key": "value"}'`}
+                              ? `curl -X GET "https://api.oceanvista.gov.in${endpoint.path}" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json"`
+                              : `curl -X ${endpoint.method} "https://api.oceanvista.gov.in${endpoint.path}" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"key": "value"}'`}
                           </pre>
                         </div>
 
-                        <div className="p-4 bg-white rounded-lg border">
+                        <div className="p-4 bg-slate-700/30 border border-slate-600/20 rounded-lg">
                           <div className="flex items-center justify-between mb-3">
-                            <Label className="font-medium">
+                            <Label className="font-medium text-slate-200">
                               JavaScript Example
                             </Label>
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+                            >
                               <Copy className="h-4 w-4 mr-1" />
                               Copy
                             </Button>
                           </div>
-                          <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                          <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto border border-slate-700/30">
                             {`const response = await fetch('${endpoint.path}', {
   method: '${endpoint.method}',
   headers: {
@@ -802,11 +858,13 @@ console.log(result);`}
       </div>
 
       {filteredEndpoints.length === 0 && (
-        <Card className="shadow-lg border-0">
+        <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl">
           <CardContent className="p-12 text-center">
-            <Search className="h-12 w-12 mx-auto mb-4 opacity-50 text-slate-400" />
-            <h3 className="font-semibold text-lg mb-2">No endpoints found</h3>
-            <p className="text-slate-600">
+            <Search className="h-12 w-12 mx-auto mb-4 opacity-50 text-cyan-400/30" />
+            <h3 className="font-semibold text-lg mb-2 text-slate-200">
+              No endpoints found
+            </h3>
+            <p className="text-slate-400">
               Try adjusting your search terms or category filter
             </p>
           </CardContent>
@@ -814,30 +872,50 @@ console.log(result);`}
       )}
 
       {/* API Status */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-teal-50">
+      <Card className="bg-gradient-to-br from-slate-800/50 to-cyan-900/20 backdrop-blur-sm border border-cyan-500/20 shadow-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
+          <CardTitle className="flex items-center gap-2 text-slate-100">
+            <Activity className="h-5 w-5 text-cyan-400" />
             API Status
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">99.9%</div>
-              <div className="text-sm text-slate-600">Uptime</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                99.9%
+              </div>
+              <div className="text-sm text-slate-400 flex items-center justify-center gap-1">
+                <CheckCircle className="h-3 w-3 text-green-400" />
+                Uptime
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">124ms</div>
-              <div className="text-sm text-slate-600">Avg Response</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                124ms
+              </div>
+              <div className="text-sm text-slate-400 flex items-center justify-center gap-1">
+                <Zap className="h-3 w-3 text-cyan-400" />
+                Avg Response
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">24</div>
-              <div className="text-sm text-slate-600">Endpoints</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
+                24
+              </div>
+              <div className="text-sm text-slate-400 flex items-center justify-center gap-1">
+                <Database className="h-3 w-3 text-purple-400" />
+                Endpoints
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">v2.1.0</div>
-              <div className="text-sm text-slate-600">API Version</div>
+              <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                v2.1.0
+              </div>
+              <div className="text-sm text-slate-400 flex items-center justify-center gap-1">
+                <Globe className="h-3 w-3 text-orange-400" />
+                API Version
+              </div>
             </div>
           </div>
         </CardContent>

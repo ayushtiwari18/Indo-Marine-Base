@@ -17,6 +17,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Copy,
+  Waves,
+  Globe,
+  Activity,
 } from "lucide-react";
 
 export const SDKDownloads = () => {
@@ -201,20 +204,7 @@ class MarineResearchApp {
       .filter(result => result.status === 'fulfilled')
       .map(result => result.value);
   }
-
-  async getMarineDatasets(region) {
-    const datasets = await this.client.datasets.search({
-      category: 'marine-biology',
-      location: region,
-      dateFrom: '2024-01-01',
-      limit: 100
-    });
-    
-    return datasets.results.filter(d => d.access_level === 'public');
-  }
-}
-
-export default MarineResearchApp;`,
+}`,
       },
     },
     {
@@ -296,40 +286,8 @@ analyze_marine_biodiversity <- function(region, years) {
       .groups = "drop"
     )
   
-  # Create visualizations
-  p1 <- ggplot(species_richness, aes(x = year, y = species_count)) +
-    geom_line(aes(color = location)) +
-    geom_point() +
-    theme_minimal() +
-    labs(
-      title = "Species Richness Over Time",
-      x = "Year",
-      y = "Number of Species"
-    )
-  
-  # Spatial analysis if coordinates available
-  if(all(c("latitude", "longitude") %in% names(biodiversity_data))) {
-    spatial_data <- biodiversity_data %>%
-      st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-    
-    p2 <- ggplot(spatial_data) +
-      geom_sf(aes(color = conservation_status)) +
-      theme_void() +
-      labs(title = "Spatial Distribution of Marine Species")
-    
-    return(list(
-      data = species_richness,
-      temporal_plot = p1,
-      spatial_plot = p2
-    ))
-  }
-  
-  return(list(data = species_richness, plot = p1))
-}
-
-# Run analysis
-results <- analyze_marine_biodiversity("Great Barrier Reef", 2020:2024)
-print(results$plot)`,
+  return(list(data = species_richness))
+}`,
       },
     },
     {
@@ -380,16 +338,7 @@ SpeciesSearchResponse response = client.species()
     .location("Atlantic Ocean")
     .execute();
 
-System.out.println("Found " + response.getTotal() + " whale species");
-
-// Analyze image
-Path imagePath = Paths.get("whale.jpg");
-AnalysisResult result = client.analyze()
-    .image(imagePath)
-    .analysisType(AnalysisType.SPECIES_IDENTIFICATION)
-    .execute();
-
-System.out.println("Top prediction: " + result.getPredictions().get(0).getSpecies());`,
+System.out.println("Found " + response.getTotal() + " whale species");`,
         advanced: `@Service
 public class MarineDataService {
     
@@ -410,47 +359,14 @@ public class MarineDataService {
                 .imageAsync(path)
                 .analysisType(AnalysisType.SPECIES_IDENTIFICATION)
                 .confidenceThreshold(0.8)
-                .executeAsync()
-                .exceptionally(throwable -> {
-                    log.error("Failed to analyze image: " + path, throwable);
-                    return null;
-                }))
+                .executeAsync())
             .collect(Collectors.toList());
         
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
             .thenApply(v -> futures.stream()
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()))
-            .whenComplete((result, throwable) -> {
-                sample.stop(Timer.builder("oceanvista.batch.analysis")
-                    .description("Batch image analysis processing time")
-                    .register(meterRegistry));
-            });
-    }
-    
-    @Cacheable("datasets")
-    public Page<Dataset> getMarineDatasets(String region, Pageable pageable) {
-        return client.datasets()
-            .search()
-            .category(DatasetCategory.MARINE_BIOLOGY)
-            .location(region)
-            .page(pageable.getPageNumber())
-            .size(pageable.getPageSize())
-            .execute();
-    }
-    
-    @EventListener
-    public void handleSpeciesDiscovery(SpeciesAnalysisEvent event) {
-        if (event.getConfidence() > 0.95) {
-            log.info("High confidence species identification: {}", 
-                event.getSpeciesName());
-            
-            // Store in database, send notifications, etc.
-            applicationEventPublisher.publishEvent(
-                new HighConfidenceSpeciesEvent(event.getSpeciesName())
-            );
-        }
+                .collect(Collectors.toList()));
     }
 }`,
       },
@@ -508,38 +424,17 @@ func main() {
     }
     
     fmt.Printf("Found %d dolphin species\\n", len(species.Results))
-    
-    // Analyze image
-    result, err := client.Analyze.Image(ctx, "whale.jpg", "species_identification")
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    fmt.Printf("Identified: %s\\n", result.TopPrediction.Species)
 }`,
         advanced: `package main
 
 import (
     "context"
     "fmt"
-    "log"
     "sync"
     "time"
     
     "github.com/oceanvista/oceanvista-go"
 )
-
-type MarineResearchPipeline struct {
-    client *oceanvista.Client
-    logger *log.Logger
-}
-
-func NewPipeline(apiKey string) *MarineResearchPipeline {
-    return &MarineResearchPipeline{
-        client: oceanvista.NewClient(apiKey),
-        logger: log.New(os.Stdout, "[MARINE] ", log.LstdFlags),
-    }
-}
 
 func (p *MarineResearchPipeline) ProcessBatchImages(ctx context.Context, imagePaths []string) error {
     const maxConcurrency = 5
@@ -547,7 +442,6 @@ func (p *MarineResearchPipeline) ProcessBatchImages(ctx context.Context, imagePa
     
     var wg sync.WaitGroup
     results := make(chan *oceanvista.AnalysisResult, len(imagePaths))
-    errors := make(chan error, len(imagePaths))
     
     for _, path := range imagePaths {
         wg.Add(1)
@@ -563,84 +457,17 @@ func (p *MarineResearchPipeline) ProcessBatchImages(ctx context.Context, imagePa
             result, err := p.client.Analyze.Image(ctx, imagePath, "species_identification")
             if err != nil {
                 p.logger.Printf("Failed to analyze %s: %v", imagePath, err)
-                errors <- err
                 return
             }
             
             results <- result
-            p.logger.Printf("Analyzed %s: %s (%.2f confidence)", 
-                imagePath, result.TopPrediction.Species, result.Confidence)
         }(path)
     }
     
-    // Close channels when done
-    go func() {
-        wg.Wait()
-        close(results)
-        close(errors)
-    }()
-    
-    // Collect results
-    var analysisResults []*oceanvista.AnalysisResult
-    var analysisErrors []error
-    
-    for {
-        select {
-        case result, ok := <-results:
-            if !ok {
-                results = nil
-            } else {
-                analysisResults = append(analysisResults, result)
-            }
-        case err, ok := <-errors:
-            if !ok {
-                errors = nil
-            } else {
-                analysisErrors = append(analysisErrors, err)
-            }
-        }
-        
-        if results == nil && errors == nil {
-            break
-        }
-    }
-    
-    p.logger.Printf("Batch analysis complete: %d successful, %d failed", 
-        len(analysisResults), len(analysisErrors))
+    wg.Wait()
+    close(results)
     
     return nil
-}
-
-func (p *MarineResearchPipeline) GetDatasets(ctx context.Context, region string) ([]*oceanvista.Dataset, error) {
-    datasets, err := p.client.Datasets.List(ctx, &oceanvista.DatasetListRequest{
-        Category: "marine-biology",
-        Location: region,
-        Limit:    50,
-    })
-    if err != nil {
-        return nil, fmt.Errorf("failed to get datasets: %w", err)
-    }
-    
-    return datasets.Results, nil
-}
-
-func main() {
-    pipeline := NewPipeline("your_api_key")
-    ctx := context.Background()
-    
-    // Process multiple images concurrently
-    imagePaths := []string{"whale1.jpg", "whale2.jpg", "whale3.jpg"}
-    if err := pipeline.ProcessBatchImages(ctx, imagePaths); err != nil {
-        log.Fatal(err)
-    }
-    
-    // Get marine datasets
-    datasets, err := pipeline.GetDatasets(ctx, "Great Barrier Reef")
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    fmt.Printf("Found %d datasets for Great Barrier Reef\\n", len(datasets))
 }`,
       },
     },
@@ -720,77 +547,9 @@ class MarineResearchService
       
       batch_results = threads.map(&:value)
       results.concat(batch_results)
-      
-      # Log progress
-      successful = batch_results.count { |r| r[:status] == :success }
-      puts "Processed batch: #{successful}/#{batch.size} successful"
     end
     
     results
-  end
-  
-  def marine_biodiversity_report(region, date_range)
-    # Get datasets
-    datasets = OceanVista::Dataset.where(
-      category: 'marine-biology',
-      location: region,
-      date_range: date_range
-    ).limit(20)
-    
-    # Process datasets
-    species_data = datasets.flat_map do |dataset|
-      dataset.download.lazy.map do |row|
-        {
-          species: row['scientific_name'],
-          location: row['location'],
-          date: Date.parse(row['observation_date']),
-          conservation_status: row['conservation_status']
-        }
-      end
-    end
-    
-    # Generate report
-    {
-      total_species: species_data.map { |d| d[:species] }.uniq.count,
-      endangered_count: species_data.count { |d| d[:conservation_status] == 'endangered' },
-      locations: species_data.map { |d| d[:location] }.uniq,
-      date_range: {
-        start: species_data.map { |d| d[:date] }.min,
-        end: species_data.map { |d| d[:date] }.max
-      }
-    }
-  end
-  
-  def schedule_analysis_job(image_path)
-    OceanVista::AnalysisJob.perform_later(image_path)
-  end
-end
-
-# Usage in Rails controller
-class MarineDataController < ApplicationController
-  def analyze
-    service = MarineResearchService.new
-    
-    if params[:batch_mode]
-      # Background processing for large batches
-      image_paths = params[:images].map { |img| img.tempfile.path }
-      job_id = service.schedule_analysis_job(image_paths)
-      render json: { job_id: job_id, status: 'processing' }
-    else
-      # Immediate analysis for single image
-      result = service.batch_analyze_images([params[:image].tempfile.path])
-      render json: result.first
-    end
-  end
-  
-  def biodiversity_report
-    service = MarineResearchService.new
-    report = service.marine_biodiversity_report(
-      params[:region],
-      Date.parse(params[:start_date])..Date.parse(params[:end_date])
-    )
-    
-    render json: report
   end
 end`,
       },
@@ -843,20 +602,14 @@ $dolphins = $client->species()->search('dolphin', [
     'location' => 'Pacific Ocean'
 ]);
 
-echo "Found " . count($dolphins->results) . " dolphin species\\n";
-
-// Analyze image
-$result = $client->analyze()->image('whale.jpg', 'species_identification');
-echo "Identified: " . $result->topPrediction->species . "\\n";`,
+echo "Found " . count($dolphins->results) . " dolphin species\\n";`,
         advanced: `<?php
 
 namespace App\\Services;
 
 use OceanVista\\Client;
-use OceanVista\\Exceptions\\OceanVistaException;
 use Illuminate\\Support\\Facades\\Cache;
 use Illuminate\\Support\\Facades\\Log;
-use Illuminate\\Http\\UploadedFile;
 
 class MarineResearchService
 {
@@ -869,128 +622,29 @@ class MarineResearchService
             'base_uri' => config('services.oceanvista.base_uri'),
             'timeout' => 30,
             'retry' => 3,
-            'middleware' => [
-                'cache' => true,
-                'logging' => true
-            ]
         ]);
     }
     
     public function batchAnalyzeImages(array $images): array
     {
         $results = [];
-        $chunks = array_chunk($images, 5); // Process in batches of 5
+        $chunks = array_chunk($images, 5);
         
         foreach ($chunks as $chunk) {
             $promises = [];
             
             foreach ($chunk as $image) {
                 $promises[] = $this->client->analyze()->imageAsync(
-                    $image instanceof UploadedFile ? $image->path() : $image,
+                    $image,
                     'species_identification'
                 );
             }
             
-            try {
-                $batchResults = $this->client->settle($promises);
-                $results = array_merge($results, $batchResults);
-                
-                Log::info('Processed image batch', [
-                    'batch_size' => count($chunk),
-                    'successful' => count(array_filter($batchResults, fn($r) => $r['status'] === 'fulfilled'))
-                ]);
-            } catch (OceanVistaException $e) {
-                Log::error('Batch processing failed', ['error' => $e->getMessage()]);
-                throw $e;
-            }
+            $batchResults = $this->client->settle($promises);
+            $results = array_merge($results, $batchResults);
         }
         
         return $results;
-    }
-    
-    public function getMarineDatasetsSummary(string $region): array
-    {
-        return Cache::remember("marine_datasets_{$region}", 3600, function () use ($region) {
-            $datasets = $this->client->datasets()->search([
-                'category' => 'marine-biology',
-                'location' => $region,
-                'limit' => 100
-            ]);
-            
-            $summary = [
-                'total_datasets' => $datasets->total,
-                'categories' => [],
-                'date_range' => ['start' => null, 'end' => null],
-                'total_size_gb' => 0
-            ];
-            
-            foreach ($datasets->results as $dataset) {
-                // Group by category
-                $category = $dataset->category;
-                if (!isset($summary['categories'][$category])) {
-                    $summary['categories'][$category] = 0;
-                }
-                $summary['categories'][$category]++;
-                
-                // Calculate date range
-                $startDate = new \\DateTime($dataset->temporal_coverage->start);
-                $endDate = new \\DateTime($dataset->temporal_coverage->end);
-                
-                if (!$summary['date_range']['start'] || $startDate < new \\DateTime($summary['date_range']['start'])) {
-                    $summary['date_range']['start'] = $startDate->format('Y-m-d');
-                }
-                
-                if (!$summary['date_range']['end'] || $endDate > new \\DateTime($summary['date_range']['end'])) {
-                    $summary['date_range']['end'] = $endDate->format('Y-m-d');
-                }
-                
-                // Sum up sizes
-                $summary['total_size_gb'] += $dataset->size_gb ?? 0;
-            }
-            
-            return $summary;
-        });
-    }
-}
-
-// Laravel Controller Usage
-class MarineDataController extends Controller
-{
-    private MarineResearchService $marineService;
-    
-    public function __construct(MarineResearchService $marineService)
-    {
-        $this->marineService = $marineService;
-    }
-    
-    public function analyzeImages(Request $request)
-    {
-        $request->validate([
-            'images' => 'required|array|max:20',
-            'images.*' => 'image|max:10240'
-        ]);
-        
-        try {
-            $results = $this->marineService->batchAnalyzeImages($request->file('images'));
-            
-            return response()->json([
-                'success' => true,
-                'results' => $results,
-                'processed_count' => count($results)
-            ]);
-        } catch (OceanVistaException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-    
-    public function datasetsSummary(string $region)
-    {
-        $summary = $this->marineService->getMarineDatasetsSummary($region);
-        
-        return response()->json($summary);
     }
 }`,
       },
@@ -1000,8 +654,11 @@ class MarineDataController extends Controller
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-2xl font-bold">Official SDKs & Libraries</h2>
-        <p className="text-slate-600">
+        <h2 className="text-2xl font-bold text-slate-100 flex items-center justify-center gap-2">
+          <Package className="h-6 w-6 text-cyan-400" />
+          Official SDKs & Libraries
+        </h2>
+        <p className="text-slate-400">
           Download official SDKs and start building with OceanVista API in your
           favorite programming language
         </p>
@@ -1010,32 +667,40 @@ class MarineDataController extends Controller
       {/* SDK Grid */}
       <div className="grid gap-6">
         {sdks.map((sdk) => (
-          <Card key={sdk.id} className="shadow-lg border-0 overflow-hidden">
-            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-blue-50">
+          <Card
+            key={sdk.id}
+            className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl overflow-hidden hover:shadow-cyan-500/10 transition-all duration-300"
+          >
+            <CardHeader className="border-b border-slate-700/30 bg-gradient-to-r from-slate-800/50 to-cyan-900/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="text-3xl">{sdk.icon}</div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold">{sdk.name}</h3>
-                      <Badge variant="outline" className="text-xs">
+                      <h3 className="text-xl font-bold text-slate-100">
+                        {sdk.name}
+                      </h3>
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                      >
                         v{sdk.version}
                       </Badge>
-                      <Badge className="bg-blue-500 text-xs">
+                      <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs shadow-lg">
                         {sdk.popularity}
                       </Badge>
                     </div>
-                    <p className="text-slate-600 text-sm">{sdk.description}</p>
+                    <p className="text-slate-400 text-sm">{sdk.description}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="flex items-center gap-1 text-sm text-slate-600">
-                      <Download className="h-4 w-4" />
+                    <div className="flex items-center gap-1 text-sm text-slate-400">
+                      <Download className="h-4 w-4 text-cyan-400" />
                       {sdk.downloads}
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-slate-600">
-                      <Star className="h-4 w-4" />
+                    <div className="flex items-center gap-1 text-sm text-slate-400">
+                      <Star className="h-4 w-4 text-yellow-400" />
                       {sdk.stars}
                     </div>
                   </div>
@@ -1048,17 +713,29 @@ class MarineDataController extends Controller
 
             <CardContent className="p-0">
               <Tabs defaultValue="install" className="w-full">
-                <TabsList className="w-full justify-start rounded-none border-b h-12">
-                  <TabsTrigger value="install" className="px-6">
+                <TabsList className="w-full justify-start rounded-none border-b border-slate-700/30 h-12 bg-slate-800/20">
+                  <TabsTrigger
+                    value="install"
+                    className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
                     Installation
                   </TabsTrigger>
-                  <TabsTrigger value="features" className="px-6">
+                  <TabsTrigger
+                    value="features"
+                    className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
                     Features
                   </TabsTrigger>
-                  <TabsTrigger value="examples" className="px-6">
+                  <TabsTrigger
+                    value="examples"
+                    className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
                     Examples
                   </TabsTrigger>
-                  <TabsTrigger value="docs" className="px-6">
+                  <TabsTrigger
+                    value="docs"
+                    className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
                     Documentation
                   </TabsTrigger>
                 </TabsList>
@@ -1067,31 +744,42 @@ class MarineDataController extends Controller
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       <div>
-                        <h4 className="font-semibold mb-2">Requirements</h4>
-                        <p className="text-sm text-slate-600">
+                        <h4 className="font-semibold mb-2 text-slate-200">
+                          Requirements
+                        </h4>
+                        <p className="text-sm text-slate-400">
                           {sdk.requirements}
                         </p>
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-2">Package Size</h4>
-                        <p className="text-sm text-slate-600">{sdk.size}</p>
+                        <h4 className="font-semibold mb-2 text-slate-200">
+                          Package Size
+                        </h4>
+                        <p className="text-sm text-slate-400">{sdk.size}</p>
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-2">Language</h4>
-                        <p className="text-sm text-slate-600">{sdk.language}</p>
+                        <h4 className="font-semibold mb-2 text-slate-200">
+                          Language
+                        </h4>
+                        <p className="text-sm text-slate-400">{sdk.language}</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold">Installation Commands</h4>
+                      <h4 className="font-semibold text-slate-200">
+                        Installation Commands
+                      </h4>
                       {Object.entries(sdk.installation).map(
                         ([method, command]) => (
                           <div
                             key={method}
-                            className="p-3 bg-slate-50 rounded-lg"
+                            className="p-3 bg-slate-700/30 border border-slate-600/20 rounded-lg hover:bg-slate-700/50 transition-colors duration-300"
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <Badge variant="outline" className="capitalize">
+                              <Badge
+                                variant="outline"
+                                className="capitalize border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                              >
                                 {method}
                               </Badge>
                               <Button
@@ -1100,16 +788,16 @@ class MarineDataController extends Controller
                                 onClick={() =>
                                   copyInstallCommand(command, sdk.id + method)
                                 }
-                                className="px-3"
+                                className="px-3 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
                               >
                                 {copiedInstall === sdk.id + method ? (
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                  <CheckCircle className="h-4 w-4 text-green-400" />
                                 ) : (
                                   <Copy className="h-4 w-4" />
                                 )}
                               </Button>
                             </div>
-                            <pre className="text-sm bg-slate-900 text-slate-100 p-3 rounded overflow-x-auto">
+                            <pre className="text-sm bg-slate-900 text-slate-100 p-3 rounded overflow-x-auto border border-slate-700/30">
                               <code>{command}</code>
                             </pre>
                           </div>
@@ -1123,8 +811,10 @@ class MarineDataController extends Controller
                   <div className="grid gap-3 md:grid-cols-2">
                     {sdk.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2 p-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
+                        <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
+                        <span className="text-sm text-slate-300">
+                          {feature}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1132,15 +822,27 @@ class MarineDataController extends Controller
 
                 <TabsContent value="examples" className="p-6">
                   <Tabs defaultValue="quickStart" className="w-full">
-                    <TabsList className="w-full justify-start">
-                      <TabsTrigger value="quickStart">Quick Start</TabsTrigger>
-                      <TabsTrigger value="advanced">Advanced Usage</TabsTrigger>
+                    <TabsList className="w-full justify-start bg-slate-700/30 border border-slate-600/30">
+                      <TabsTrigger
+                        value="quickStart"
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300"
+                      >
+                        Quick Start
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="advanced"
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-300"
+                      >
+                        Advanced Usage
+                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="quickStart" className="mt-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold">Quick Start Example</h4>
+                          <h4 className="font-semibold text-slate-200">
+                            Quick Start Example
+                          </h4>
                           <Button
                             size="sm"
                             variant="outline"
@@ -1150,12 +852,13 @@ class MarineDataController extends Controller
                                 `${sdk.id}-quick`
                               )
                             }
+                            className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
                           >
                             <Copy className="h-4 w-4 mr-1" />
                             Copy
                           </Button>
                         </div>
-                        <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                        <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto border border-slate-700/30">
                           <code>{sdk.examples.quickStart}</code>
                         </pre>
                       </div>
@@ -1164,7 +867,9 @@ class MarineDataController extends Controller
                     <TabsContent value="advanced" className="mt-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold">Advanced Example</h4>
+                          <h4 className="font-semibold text-slate-200">
+                            Advanced Example
+                          </h4>
                           <Button
                             size="sm"
                             variant="outline"
@@ -1174,12 +879,13 @@ class MarineDataController extends Controller
                                 `${sdk.id}-advanced`
                               )
                             }
+                            className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
                           >
                             <Copy className="h-4 w-4 mr-1" />
                             Copy
                           </Button>
                         </div>
-                        <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto max-h-96">
+                        <pre className="text-xs bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto max-h-96 border border-slate-700/30">
                           <code>{sdk.examples.advanced}</code>
                         </pre>
                       </div>
@@ -1192,12 +898,12 @@ class MarineDataController extends Controller
                     <div className="grid gap-4 md:grid-cols-2">
                       <Button
                         variant="outline"
-                        className="flex items-center gap-2 h-auto p-4 justify-start"
+                        className="flex items-center gap-2 h-auto p-4 justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
                       >
-                        <BookOpen className="h-5 w-5 text-blue-500" />
+                        <BookOpen className="h-5 w-5 text-cyan-400" />
                         <div className="text-left">
                           <div className="font-medium">Documentation</div>
-                          <div className="text-sm text-slate-600">
+                          <div className="text-sm text-slate-500">
                             Complete API reference
                           </div>
                         </div>
@@ -1206,12 +912,12 @@ class MarineDataController extends Controller
 
                       <Button
                         variant="outline"
-                        className="flex items-center gap-2 h-auto p-4 justify-start"
+                        className="flex items-center gap-2 h-auto p-4 justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
                       >
-                        <Github className="h-5 w-5 text-slate-700" />
+                        <Github className="h-5 w-5 text-slate-400" />
                         <div className="text-left">
                           <div className="font-medium">Source Code</div>
-                          <div className="text-sm text-slate-600">
+                          <div className="text-sm text-slate-500">
                             View on GitHub
                           </div>
                         </div>
@@ -1220,12 +926,12 @@ class MarineDataController extends Controller
 
                       <Button
                         variant="outline"
-                        className="flex items-center gap-2 h-auto p-4 justify-start"
+                        className="flex items-center gap-2 h-auto p-4 justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
                       >
-                        <Package className="h-5 w-5 text-green-500" />
+                        <Package className="h-5 w-5 text-green-400" />
                         <div className="text-left">
                           <div className="font-medium">Package Registry</div>
-                          <div className="text-sm text-slate-600">
+                          <div className="text-sm text-slate-500">
                             View package details
                           </div>
                         </div>
@@ -1234,12 +940,12 @@ class MarineDataController extends Controller
 
                       <Button
                         variant="outline"
-                        className="flex items-center gap-2 h-auto p-4 justify-start"
+                        className="flex items-center gap-2 h-auto p-4 justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
                       >
-                        <Users className="h-5 w-5 text-purple-500" />
+                        <Users className="h-5 w-5 text-purple-400" />
                         <div className="text-left">
                           <div className="font-medium">Community</div>
-                          <div className="text-sm text-slate-600">
+                          <div className="text-sm text-slate-500">
                             Join discussions
                           </div>
                         </div>
@@ -1247,14 +953,14 @@ class MarineDataController extends Controller
                       </Button>
                     </div>
 
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <Zap className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-blue-800">
+                        <Zap className="h-4 w-4 text-cyan-400" />
+                        <span className="font-medium text-cyan-200">
                           Getting Started Tips
                         </span>
                       </div>
-                      <ul className="text-sm text-blue-700 space-y-1">
+                      <ul className="text-sm text-cyan-300 space-y-1">
                         <li>• Start with the quick start example above</li>
                         <li>• Check out our comprehensive documentation</li>
                         <li>
@@ -1272,10 +978,10 @@ class MarineDataController extends Controller
       </div>
 
       {/* Community & Support */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-blue-50">
+      <Card className="bg-gradient-to-br from-slate-800/50 to-purple-900/20 backdrop-blur-sm border border-purple-500/20 shadow-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-purple-500" />
+          <CardTitle className="flex items-center gap-2 text-slate-100">
+            <Users className="h-5 w-5 text-purple-400" />
             Community & Support
           </CardTitle>
         </CardHeader>
@@ -1283,44 +989,68 @@ class MarineDataController extends Controller
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center">
               <div className="text-3xl mb-2">🚀</div>
-              <h4 className="font-semibold mb-2">Quick Start Guide</h4>
-              <p className="text-sm text-slate-600 mb-3">
+              <h4 className="font-semibold mb-2 text-slate-200">
+                Quick Start Guide
+              </h4>
+              <p className="text-sm text-slate-400 mb-3">
                 Get up and running in minutes with our step-by-step guide
               </p>
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+              >
                 View Guide
               </Button>
             </div>
 
             <div className="text-center">
               <div className="text-3xl mb-2">📖</div>
-              <h4 className="font-semibold mb-2">API Documentation</h4>
-              <p className="text-sm text-slate-600 mb-3">
+              <h4 className="font-semibold mb-2 text-slate-200">
+                API Documentation
+              </h4>
+              <p className="text-sm text-slate-400 mb-3">
                 Complete reference documentation with examples
               </p>
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+              >
                 Read Docs
               </Button>
             </div>
 
             <div className="text-center">
               <div className="text-3xl mb-2">💬</div>
-              <h4 className="font-semibold mb-2">Community Forum</h4>
-              <p className="text-sm text-slate-600 mb-3">
+              <h4 className="font-semibold mb-2 text-slate-200">
+                Community Forum
+              </h4>
+              <p className="text-sm text-slate-400 mb-3">
                 Get help from our community of developers
               </p>
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+              >
                 Join Forum
               </Button>
             </div>
 
             <div className="text-center">
               <div className="text-3xl mb-2">🐛</div>
-              <h4 className="font-semibold mb-2">Report Issues</h4>
-              <p className="text-sm text-slate-600 mb-3">
+              <h4 className="font-semibold mb-2 text-slate-200">
+                Report Issues
+              </h4>
+              <p className="text-sm text-slate-400 mb-3">
                 Found a bug? Report it on our GitHub repository
               </p>
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
+              >
                 Report Bug
               </Button>
             </div>
@@ -1329,46 +1059,67 @@ class MarineDataController extends Controller
       </Card>
 
       {/* SDK Comparison */}
-      <Card className="shadow-lg border-0">
+      <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl">
         <CardHeader>
-          <CardTitle>SDK Comparison</CardTitle>
+          <CardTitle className="text-slate-100 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-cyan-400" />
+            SDK Comparison
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-3">SDK</th>
-                  <th className="text-left p-3">Version</th>
-                  <th className="text-left p-3">Downloads</th>
-                  <th className="text-left p-3">Size</th>
-                  <th className="text-left p-3">Best For</th>
-                  <th className="text-left p-3">Features</th>
+                <tr className="border-b border-slate-700/30">
+                  <th className="text-left p-3 text-slate-200">SDK</th>
+                  <th className="text-left p-3 text-slate-200">Version</th>
+                  <th className="text-left p-3 text-slate-200">Downloads</th>
+                  <th className="text-left p-3 text-slate-200">Size</th>
+                  <th className="text-left p-3 text-slate-200">Best For</th>
+                  <th className="text-left p-3 text-slate-200">Features</th>
                 </tr>
               </thead>
               <tbody>
                 {sdks.slice(0, 4).map((sdk) => (
-                  <tr key={sdk.id} className="border-b hover:bg-slate-50">
+                  <tr
+                    key={sdk.id}
+                    className="border-b border-slate-700/20 hover:bg-slate-700/20 transition-colors duration-300"
+                  >
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{sdk.icon}</span>
-                        <span className="font-medium">{sdk.name}</span>
+                        <span className="font-medium text-slate-200">
+                          {sdk.name}
+                        </span>
                       </div>
                     </td>
                     <td className="p-3">
-                      <Badge variant="outline">v{sdk.version}</Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                      >
+                        v{sdk.version}
+                      </Badge>
                     </td>
-                    <td className="p-3">{sdk.downloads}</td>
-                    <td className="p-3">{sdk.size}</td>
+                    <td className="p-3 text-slate-300">{sdk.downloads}</td>
+                    <td className="p-3 text-slate-300">{sdk.size}</td>
                     <td className="p-3">
-                      <Badge className="bg-blue-500">{sdk.popularity}</Badge>
+                      <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+                        {sdk.popularity}
+                      </Badge>
                     </td>
                     <td className="p-3">
                       <div className="flex gap-1">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-slate-600/30 text-slate-400"
+                        >
                           Async
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-slate-600/30 text-slate-400"
+                        >
                           Types
                         </Badge>
                         <span className="text-slate-500">

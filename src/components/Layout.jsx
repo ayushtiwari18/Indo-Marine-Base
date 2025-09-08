@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { gsap } from "gsap";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -7,84 +7,80 @@ import { TopNav } from "@/components/TopNav";
 
 const Layout = () => {
   const containerRef = useRef(null);
-  const spheresRef = useRef([]);
-  const backgroundRef = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // GSAP Timeline for initial animations
-    const tl = gsap.timeline();
+    // Simplified GSAP animations - only for background effects
+    const ctx = gsap.context(() => {
+      // Animate only floating elements, not layout components
+      gsap.to(".floating-sphere", {
+        y: "+=20",
+        x: "+=10",
+        rotation: 180,
+        duration: 12,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        stagger: 2,
+      });
 
-    // Animate background entrance only
-    tl.from(backgroundRef.current, {
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out",
-    });
+      // Background stars animation
+      gsap.to(".stars-layer-1, .stars-layer-2, .stars-layer-3", {
+        backgroundPosition: "200px 0px",
+        duration: 20,
+        ease: "none",
+        repeat: -1,
+      });
+    }, containerRef);
 
-    // Animate floating spheres without affecting main content
-    spheresRef.current.forEach((sphere, index) => {
-      if (sphere) {
-        // Set initial position
-        gsap.set(sphere, {
-          x: Math.random() * 200,
-          y: Math.random() * 200,
-          scale: Math.random() * 0.3 + 0.2,
-          opacity: 0.3,
-        });
-
-        // Animate floating motion
-        gsap.to(sphere, {
-          x: `+=${Math.random() * 60 - 30}`,
-          y: `+=${Math.random() * 60 - 30}`,
-          rotation: 360,
-          duration: 15 + Math.random() * 10,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          delay: index * 1,
-        });
-      }
-    });
-
-    // Cleanup function
-    return () => {
-      tl.kill();
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-slate-900 text-slate-200 relative overflow-hidden"
-    >
-      {/* Ocean Background Effects - Separate animation target */}
-      <div ref={backgroundRef} className="fixed inset-0 pointer-events-none">
-        <div className="stars-layer-1"></div>
-        <div className="stars-layer-2"></div>
-        <div className="stars-layer-3"></div>
+    <div ref={containerRef} className="min-h-screen bg-slate-900">
+      {/* Background Effects - Fixed positioning with consistent theme */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Consistent dark background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800"></div>
+
+        {/* Subtle ocean theme overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-transparent to-blue-900/5"></div>
+
+        {/* Stars layers with consistent colors */}
+        <div className="stars-layer-1 opacity-30"></div>
+        <div className="stars-layer-2 opacity-20"></div>
+        <div className="stars-layer-3 opacity-10"></div>
 
         {/* Controlled floating spheres */}
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            ref={(el) => (spheresRef.current[i] = el)}
-            className="absolute w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400/10 to-blue-500/5 blur-sm"
+            className="floating-sphere absolute w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400/8 to-blue-500/4 blur-sm"
+            style={{
+              top: `${20 + i * 30}%`,
+              left: `${10 + i * 25}%`,
+            }}
           />
         ))}
       </div>
 
       <SidebarProvider>
-        <div className="min-h-screen flex w-full relative z-10">
+        {/* Sidebar - Fixed positioning */}
+        <div className={`sidebar-container ${isSidebarOpen ? "open" : ""}`}>
           <AppSidebar />
-          <div className="flex-1 flex flex-col">
-            <TopNav />
-            <main className="flex-1 p-6 relative bg-slate-900 text-slate-200">
-              {/* Remove problematic animations from content wrapper */}
-              <div className="relative z-20">
-                <Outlet />
-              </div>
-            </main>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="main-content-area bg-slate-900 relative z-10">
+          {/* Top Navigation */}
+          <div className="dashboard-topnav">
+            <TopNav onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
           </div>
+
+          {/* Main Content */}
+          <main className="dashboard-content content-wrapper bg-slate-900 min-h-[calc(100vh-80px-64px)]">
+            <Outlet />
+          </main>
         </div>
       </SidebarProvider>
     </div>

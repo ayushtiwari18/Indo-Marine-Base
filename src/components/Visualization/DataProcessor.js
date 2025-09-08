@@ -127,7 +127,7 @@ class DataProcessor {
           const headers = jsonData[0];
           const rows = jsonData.slice(1);
           const result = rows.map((row) => {
-            const obj = {};
+            let obj = {};
             headers.forEach((header, index) => {
               obj[header] = row[index] || "";
             });
@@ -630,7 +630,7 @@ class DataProcessor {
 
   // Simple XML to JSON converter
   xmlToJson(xml) {
-    const obj = {};
+   let obj = {};
 
     if (xml.nodeType === 1) {
       if (xml.attributes.length > 0) {

@@ -33,6 +33,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [navbarHeight, setNavbarHeight] = useState(80);
   const navRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +46,18 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Update CSS custom property for navbar height
+  useEffect(() => {
+    if (navRef.current) {
+      const height = navRef.current.offsetHeight;
+      setNavbarHeight(height);
+      document.documentElement.style.setProperty(
+        "--navbar-height",
+        `${height}px`
+      );
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -72,13 +85,19 @@ const Navbar = () => {
     {
       name: "Research",
       items: [
-        { name: "Data Visualization Tool", href: "/visualization-tool", icon: FlaskConical },
+        { name: "Tableau Dashboard", href: "/analytics", icon: BarChart3 },
+        {
+          name: "Data Visualization Tool",
+          href: "/visualization-tool",
+          icon: FlaskConical,
+        },
         { name: "Publications", href: "/publications", icon: FileText },
         { name: "Collaborations", href: "/collaborations", icon: Users },
         { name: "Projects", href: "/projects", icon: BookOpen },
         { name: "Outreach", href: "/outreach", icon: Globe },
       ],
     },
+    {name:"API Access",href:"/api-access",icon:Globe},
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];
@@ -100,10 +119,10 @@ const Navbar = () => {
   return (
     <motion.nav
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 ${
         isScrolled
           ? "bg-slate-900/95 backdrop-blur-xl border-b border-cyan-500/20 shadow-2xl shadow-cyan-500/10"
-          : "bg-transparent"
+          : "bg-slate-900/80 backdrop-blur-md border-b border-cyan-500/10"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -154,7 +173,7 @@ const Navbar = () => {
                     <AnimatePresence>
                       {activeDropdown === index && (
                         <motion.div
-                          className="absolute top-full left-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 overflow-hidden"
+                          className="absolute top-full left-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 overflow-hidden z-[10000]"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
@@ -237,7 +256,7 @@ const Navbar = () => {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="lg:hidden bg-slate-800/95 backdrop-blur-xl rounded-2xl mt-4 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 overflow-hidden"
+              className="lg:hidden bg-slate-800/95 backdrop-blur-xl rounded-2xl mt-4 mb-4 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 overflow-hidden"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}

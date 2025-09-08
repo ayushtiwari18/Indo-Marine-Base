@@ -4,27 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Bell, User, Settings, ChevronDown } from "lucide-react";
+import { Search, Bell, User, Settings, ChevronDown, Menu } from "lucide-react";
 
-export function TopNav() {
+export function TopNav({ onToggleSidebar }) {
   const navRef = useRef(null);
-  const searchRef = useRef(null);
-  const avatarRef = useRef(null);
 
   useEffect(() => {
-    // Minimal GSAP animations to prevent conflicts
-    const tl = gsap.timeline();
-
+    // Minimal animation that doesn't affect layout
     if (navRef.current) {
-      tl.from(navRef.current, {
-        y: -10,
-        opacity: 0,
-        duration: 0.3,
-        ease: "power2.out",
-      });
+      gsap.fromTo(
+        navRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power2.out" }
+      );
     }
-
-    return () => tl.kill();
   }, []);
 
   return (
@@ -32,9 +25,10 @@ export function TopNav() {
       ref={navRef}
       className="flex h-16 items-center gap-4 bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 px-6 relative"
     >
-      {/* Your existing header content */}
+      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-800/90 pointer-events-none"></div>
 
+      {/* Decorative elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-2 left-20 w-2 h-2 bg-cyan-400/30 rounded-full animate-pulse"></div>
         <div
@@ -48,10 +42,23 @@ export function TopNav() {
       </div>
 
       <div className="flex items-center gap-4 relative z-10 w-full">
-        <SidebarTrigger className="text-slate-300 hover:text-cyan-300 hover:bg-slate-800/50 transition-colors" />
+        {/* Mobile sidebar trigger */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden text-slate-300 hover:text-cyan-300 hover:bg-slate-800/50 transition-colors"
+          onClick={onToggleSidebar}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Desktop sidebar trigger */}
+        <div className="hidden lg:block">
+          <SidebarTrigger className="text-slate-300 hover:text-cyan-300 hover:bg-slate-800/50 transition-colors" />
+        </div>
 
         <div className="flex flex-1 items-center gap-4">
-          <div ref={searchRef} className="relative flex-1 max-w-md group">
+          <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
             <Input
               placeholder="Search datasets, species..."
@@ -60,7 +67,7 @@ export function TopNav() {
           </div>
         </div>
 
-        <div ref={avatarRef} className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -94,4 +101,4 @@ export function TopNav() {
       </div>
     </header>
   );
-};
+}

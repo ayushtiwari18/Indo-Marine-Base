@@ -42,8 +42,7 @@ import RouteManager from "@/components/RouteManager";
 import TemperatureHeatMap from "@/components/TemperatureHeatMap";
 import BiodiversityMap from "@/components/BiodiversityMap";
 import OceanParametersMap from "@/components/OceanParametersMap";
-import TimeSeriesAnalytics from "@/components/TimeSeriesAnalytics";
-import BiodiversityAnalytics from "@/components/BiodiversityAnalytics";
+import TableauEmbed from "@/components/TableauEmbed";
 
 const Visualization = () => {
   const [selectedParameter1, setSelectedParameter1] = useState("temperature");
@@ -154,6 +153,14 @@ const Visualization = () => {
     { value: 32.1, salinity: 35.4, fishDensity: 28 },
     { value: 31.8, salinity: 35.2, fishDensity: 35 },
   ];
+
+  const handleTableauLoad = () => {
+    console.log("Tableau dashboard loaded successfully");
+  };
+
+  const handleTableauError = () => {
+    console.error("Failed to load Tableau dashboard");
+  };
 
   useEffect(() => {
     const tl = gsap.timeline();
@@ -429,15 +436,18 @@ const Visualization = () => {
                 </div>
 
                 <div className="rounded-xl overflow-hidden border border-cyan-500/20">
-                  <iframe
+                  {/* TableauEmbed Component */}
+                  <TableauEmbed
                     src="https://public.tableau.com/views/Demo_17571681827350/Dashboard1?:showVizHome=no&:embed=true"
-                    style={{
-                      width: `${window.innerWidth}px`,
-                      height: "600px",
-                      border: "none",
-                      marginBottom: "100px",
-                    }}
-                  ></iframe>
+                    width="100%"
+                    height="600px"
+                    marginBottom="100px"
+                    title="Ocean Data Dashboard"
+                    className="w-full"
+                    onLoad={handleTableauLoad}
+                    onError={handleTableauError}
+                  />
+
                   <InteractiveMap
                     height="h-[600px]"
                     onMarkerClick={handleMarkerClick}

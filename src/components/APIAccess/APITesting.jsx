@@ -13,7 +13,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Zap, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  Play,
+  Zap,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Waves,
+  TestTube,
+  Database,
+  Activity,
+} from "lucide-react";
 
 export const APITesting = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState("datasets");
@@ -192,8 +202,11 @@ export const APITesting = () => {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-2xl font-bold">Interactive API Testing</h2>
-        <p className="text-slate-600">
+        <h2 className="text-2xl font-bold text-slate-100 flex items-center justify-center gap-2">
+          <TestTube className="h-6 w-6 text-cyan-400" />
+          Interactive API Testing
+        </h2>
+        <p className="text-slate-400">
           Test our API endpoints directly from your browser with real-time
           responses
         </p>
@@ -201,31 +214,40 @@ export const APITesting = () => {
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Request Builder */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="border-b bg-slate-50">
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-blue-500" />
+        <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300">
+          <CardHeader className="border-b border-slate-700/30 bg-slate-800/20">
+            <CardTitle className="flex items-center gap-2 text-slate-100">
+              <Zap className="h-5 w-5 text-cyan-400" />
               Request Builder
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             {/* Endpoint Selection */}
             <div className="space-y-2">
-              <Label>Select Endpoint</Label>
+              <Label className="text-slate-200">Select Endpoint</Label>
               <Select
                 value={selectedEndpoint}
                 onValueChange={setSelectedEndpoint}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-slate-700/30 border-slate-600/30 text-slate-200 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(endpoints).map(([key, endpoint]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem
+                      key={key}
+                      value={key}
+                      className="text-slate-200 focus:bg-slate-700 focus:text-cyan-400"
+                    >
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={
-                            endpoint.method === "GET" ? "secondary" : "default"
+                            endpoint.method === "GET" ? "outline" : "default"
+                          }
+                          className={
+                            endpoint.method === "GET"
+                              ? "border-green-500/30 text-green-400 bg-green-500/10"
+                              : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                           }
                         >
                           {endpoint.method}
@@ -239,35 +261,47 @@ export const APITesting = () => {
             </div>
 
             {/* Endpoint Info */}
-            <div className="p-4 bg-slate-50 rounded-lg">
+            <div className="p-4 bg-slate-700/30 border border-slate-600/20 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Badge
                   variant={
                     endpoints[selectedEndpoint].method === "GET"
-                      ? "secondary"
+                      ? "outline"
                       : "default"
+                  }
+                  className={
+                    endpoints[selectedEndpoint].method === "GET"
+                      ? "border-green-500/30 text-green-400 bg-green-500/10"
+                      : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                   }
                 >
                   {endpoints[selectedEndpoint].method}
                 </Badge>
-                <code className="text-sm bg-white px-2 py-1 rounded border">
+                <code className="text-sm bg-slate-800/50 border border-slate-600/30 text-cyan-300 px-2 py-1 rounded">
                   {endpoints[selectedEndpoint].url}
                 </code>
               </div>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-400">
                 {endpoints[selectedEndpoint].name}
               </p>
             </div>
 
             {/* Parameters */}
             <div className="space-y-4">
-              <Label className="text-base font-semibold">Parameters</Label>
+              <Label className="text-base font-semibold text-slate-200">
+                Parameters
+              </Label>
               {endpoints[selectedEndpoint].parameters.map((param) => (
                 <div key={param.name} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor={param.name}>{param.name}</Label>
+                    <Label htmlFor={param.name} className="text-slate-300">
+                      {param.name}
+                    </Label>
                     {param.required && (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge
+                        variant="destructive"
+                        className="text-xs bg-red-500/20 text-red-400 border-red-500/30"
+                      >
                         Required
                       </Badge>
                     )}
@@ -279,12 +313,16 @@ export const APITesting = () => {
                         updateParameter(param.name, value)
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-700/30 border-slate-600/30 text-slate-200 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20">
                         <SelectValue placeholder={`Select ${param.name}`} />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-800 border-slate-600">
                         {param.options.map((option) => (
-                          <SelectItem key={option} value={option}>
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            className="text-slate-200 focus:bg-slate-700 focus:text-cyan-400"
+                          >
                             {option}
                           </SelectItem>
                         ))}
@@ -297,6 +335,7 @@ export const APITesting = () => {
                       onChange={(e) =>
                         updateParameter(param.name, e.target.files[0])
                       }
+                      className="bg-slate-700/30 border-slate-600/30 text-slate-200 file:bg-slate-600 file:text-slate-200 file:border-0 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
                     />
                   ) : param.type === "number" ? (
                     <Input
@@ -305,6 +344,7 @@ export const APITesting = () => {
                       onChange={(e) =>
                         updateParameter(param.name, e.target.value)
                       }
+                      className="bg-slate-700/30 border-slate-600/30 text-slate-200 placeholder:text-slate-500 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
                     />
                   ) : (
                     <Input
@@ -313,6 +353,7 @@ export const APITesting = () => {
                       onChange={(e) =>
                         updateParameter(param.name, e.target.value)
                       }
+                      className="bg-slate-700/30 border-slate-600/30 text-slate-200 placeholder:text-slate-500 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
                     />
                   )}
                 </div>
@@ -323,7 +364,7 @@ export const APITesting = () => {
             <Button
               onClick={handleTest}
               disabled={isLoading}
-              className="w-full bg-blue-500 hover:bg-blue-600"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 font-semibold"
               size="lg"
             >
               {isLoading ? (
@@ -342,17 +383,20 @@ export const APITesting = () => {
         </Card>
 
         {/* Response Viewer */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="border-b bg-slate-50">
-            <CardTitle className="flex items-center justify-between">
+        <Card className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300">
+          <CardHeader className="border-b border-slate-700/30 bg-slate-800/20">
+            <CardTitle className="flex items-center justify-between text-slate-100">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-green-500" />
+                <Activity className="h-5 w-5 text-cyan-400" />
                 Response
               </div>
               {response && (
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <Badge variant="secondary">
+                  <CheckCircle className="h-4 w-4 text-green-400" />
+                  <Badge
+                    variant="outline"
+                    className="border-green-500/30 text-green-400 bg-green-500/10"
+                  >
                     {response.meta?.response_time || "0.12s"}
                   </Badge>
                 </div>
@@ -362,24 +406,41 @@ export const APITesting = () => {
           <CardContent className="p-0">
             {response ? (
               <Tabs defaultValue="response" className="w-full">
-                <TabsList className="w-full justify-start rounded-none border-b">
-                  <TabsTrigger value="response">Response</TabsTrigger>
-                  <TabsTrigger value="headers">Headers</TabsTrigger>
-                  <TabsTrigger value="raw">Raw JSON</TabsTrigger>
+                <TabsList className="w-full justify-start rounded-none border-b border-slate-700/30 bg-slate-800/20">
+                  <TabsTrigger
+                    value="response"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
+                    Response
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="headers"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
+                    Headers
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="raw"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-slate-400 hover:text-slate-200"
+                  >
+                    Raw JSON
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="response" className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-green-500">200 OK</Badge>
-                      <span className="text-sm text-slate-600">
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                        200 OK
+                      </Badge>
+                      <span className="text-sm text-slate-400">
                         Response time: {response.meta?.response_time}
                       </span>
                     </div>
 
                     {response.data.results && (
                       <div>
-                        <h4 className="font-semibold mb-3">
+                        <h4 className="font-semibold mb-3 text-slate-200">
                           Results ({response.data.results.length} of{" "}
                           {response.data.total || "N/A"})
                         </h4>
@@ -389,7 +450,7 @@ export const APITesting = () => {
                             .map((item, index) => (
                               <div
                                 key={index}
-                                className="p-3 bg-slate-50 rounded-lg"
+                                className="p-3 bg-slate-700/30 border border-slate-600/20 rounded-lg hover:bg-slate-700/50 transition-colors duration-300"
                               >
                                 <div className="grid gap-2 text-sm">
                                   {Object.entries(item)
@@ -399,10 +460,10 @@ export const APITesting = () => {
                                         key={key}
                                         className="flex justify-between"
                                       >
-                                        <span className="font-medium text-slate-600">
+                                        <span className="font-medium text-slate-400">
                                           {key}:
                                         </span>
-                                        <span className="text-right">
+                                        <span className="text-right text-slate-200">
                                           {Array.isArray(value)
                                             ? value.join(", ")
                                             : value?.toString()}
@@ -418,23 +479,28 @@ export const APITesting = () => {
 
                     {response.data.predictions && (
                       <div>
-                        <h4 className="font-semibold mb-3">AI Predictions</h4>
+                        <h4 className="font-semibold mb-3 text-slate-200">
+                          AI Predictions
+                        </h4>
                         <div className="space-y-3">
                           {response.data.predictions.map((pred, index) => (
                             <div
                               key={index}
-                              className="p-3 bg-blue-50 rounded-lg"
+                              className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg"
                             >
                               <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium">
+                                <span className="font-medium text-slate-200">
                                   {pred.common_name || pred.species}
                                 </span>
-                                <Badge variant="secondary">
+                                <Badge
+                                  variant="outline"
+                                  className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                                >
                                   {(pred.probability * 100).toFixed(1)}%
                                 </Badge>
                               </div>
                               {pred.species && (
-                                <div className="text-sm text-slate-600">
+                                <div className="text-sm text-slate-400">
                                   <em>{pred.species}</em>
                                 </div>
                               )}
@@ -450,24 +516,30 @@ export const APITesting = () => {
                   <div className="space-y-2">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="font-medium">Content-Type:</span>
-                        <div className="text-slate-600">application/json</div>
+                        <span className="font-medium text-slate-200">
+                          Content-Type:
+                        </span>
+                        <div className="text-slate-400">application/json</div>
                       </div>
                       <div>
-                        <span className="font-medium">API-Version:</span>
-                        <div className="text-slate-600">
+                        <span className="font-medium text-slate-200">
+                          API-Version:
+                        </span>
+                        <div className="text-slate-400">
                           {response.meta?.api_version}
                         </div>
                       </div>
                       <div>
-                        <span className="font-medium">
+                        <span className="font-medium text-slate-200">
                           Rate-Limit-Remaining:
                         </span>
-                        <div className="text-slate-600">4,847</div>
+                        <div className="text-slate-400">4,847</div>
                       </div>
                       <div>
-                        <span className="font-medium">Response-Time:</span>
-                        <div className="text-slate-600">
+                        <span className="font-medium text-slate-200">
+                          Response-Time:
+                        </span>
+                        <div className="text-slate-400">
                           {response.meta?.response_time}
                         </div>
                       </div>
@@ -476,15 +548,17 @@ export const APITesting = () => {
                 </TabsContent>
 
                 <TabsContent value="raw" className="p-0">
-                  <pre className="p-6 text-sm overflow-auto bg-slate-900 text-slate-100 max-h-96">
+                  <pre className="p-6 text-sm overflow-auto bg-slate-900 text-slate-100 max-h-96 border-t border-slate-700/30">
                     {JSON.stringify(response, null, 2)}
                   </pre>
                 </TabsContent>
               </Tabs>
             ) : (
               <div className="p-12 text-center text-slate-500">
-                <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Click "Test API" to see the response here</p>
+                <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50 text-cyan-400/30" />
+                <p className="text-slate-400">
+                  Click "Test API" to see the response here
+                </p>
               </div>
             )}
           </CardContent>
@@ -492,23 +566,29 @@ export const APITesting = () => {
       </div>
 
       {/* Quick Testing Examples */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-teal-50">
+      <Card className="bg-gradient-to-br from-slate-800/50 to-cyan-900/20 backdrop-blur-sm border border-cyan-500/20 shadow-2xl">
         <CardHeader>
-          <CardTitle>Quick Test Examples</CardTitle>
+          <CardTitle className="text-slate-100 flex items-center gap-2">
+            <Waves className="h-5 w-5 text-cyan-400" />
+            Quick Test Examples
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <Button
               variant="outline"
-              className="h-auto p-4 text-left justify-start"
+              className="h-auto p-4 text-left justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
               onClick={() => {
                 setSelectedEndpoint("datasets");
                 setParameters({ category: "marine-biology", limit: 10 });
               }}
             >
               <div>
-                <div className="font-medium">Marine Biology Data</div>
-                <div className="text-sm text-slate-600">
+                <div className="font-medium flex items-center gap-2">
+                  <Database className="h-4 w-4 text-cyan-400" />
+                  Marine Biology Data
+                </div>
+                <div className="text-sm text-slate-400">
                   Get marine biology datasets
                 </div>
               </div>
@@ -516,15 +596,18 @@ export const APITesting = () => {
 
             <Button
               variant="outline"
-              className="h-auto p-4 text-left justify-start"
+              className="h-auto p-4 text-left justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
               onClick={() => {
                 setSelectedEndpoint("species");
                 setParameters({ q: "dolphin", location: "pacific ocean" });
               }}
             >
               <div>
-                <div className="font-medium">Pacific Dolphins</div>
-                <div className="text-sm text-slate-600">
+                <div className="font-medium flex items-center gap-2">
+                  <Waves className="h-4 w-4 text-blue-400" />
+                  Pacific Dolphins
+                </div>
+                <div className="text-sm text-slate-400">
                   Search for dolphin species
                 </div>
               </div>
@@ -532,15 +615,18 @@ export const APITesting = () => {
 
             <Button
               variant="outline"
-              className="h-auto p-4 text-left justify-start"
+              className="h-auto p-4 text-left justify-start border-slate-600/30 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100 hover:border-cyan-400/50 transition-all duration-300"
               onClick={() => {
                 setSelectedEndpoint("analyze");
                 setParameters({ analysis_type: "species_identification" });
               }}
             >
               <div>
-                <div className="font-medium">Species ID</div>
-                <div className="text-sm text-slate-600">
+                <div className="font-medium flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-purple-400" />
+                  Species ID
+                </div>
+                <div className="text-sm text-slate-400">
                   Identify species from image
                 </div>
               </div>

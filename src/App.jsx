@@ -30,6 +30,7 @@ import SpeciesDatabase from "./pages/SpeciesDatabase";
 import ResearchTools from "./pages/ResearchTools";
 import DataExplorer from "./pages/DataExplorer";
 import DataVisualizationTool from "./components/Visualization/DataVisualizationTool";
+import TableauDashboard from "./pages/TableauDashboard";
 
 const queryClient = new QueryClient();
 
@@ -55,11 +56,13 @@ const App = () => (
           />
 
           {/* Research Routes */}
+          <Route path="/analytics" element={<TableauDashboard />} />
           <Route path="/publications" element={<Publications />} />
           <Route path="/collaborations" element={<Collaborations />} />
           <Route path="/projects" element={<Projects />} />
 
           {/* Additional Platform Features */}
+          <Route path="/api-access" element={<APIAccess />} />
           <Route path="/species-database" element={<SpeciesDatabase />} />
           <Route path="/research-tools" element={<ResearchTools />} />
           <Route path="/data-explorer" element={<DataExplorer />} />
@@ -75,13 +78,14 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
 
           {/* Main Application Routes */}
+          <Route path="/dashboard" element={<Home />} />
           <Route element={<Layout />}>
             {/* Platform Routes */}
-            <Route path="/dashboard" element={<Home />} />
+
             <Route path="/datasets" element={<Datasets />} />
             <Route path="/visualization" element={<Visualization />} />
             <Route path="/ai-tools" element={<AITools />} />
-            <Route path="/api-access" element={<APIAccess />} />
+
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/outreach" element={<Outreach />} />
 
