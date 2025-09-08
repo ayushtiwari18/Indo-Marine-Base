@@ -13,6 +13,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Outreach from "./pages/Outreach";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import Navbar from "@/components/navigation/Navbar";
+import Footer from "@/components/navigation/Footer";
 
 // New recommended pages to implement
 import About from "./pages/About";
@@ -27,6 +29,7 @@ import Documentation from "./pages/Documentation";
 import SpeciesDatabase from "./pages/SpeciesDatabase";
 import ResearchTools from "./pages/ResearchTools";
 import DataExplorer from "./pages/DataExplorer";
+import DataVisualizationTool from "./components/Visualization/DataVisualizationTool";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Navbar />
         <Routes>
           {/* Landing Page */}
           <Route path="/" element={<Index />} />
@@ -43,6 +47,12 @@ const App = () => (
           {/* Authentication Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* New Visualization Tool Route */}
+          <Route
+            path="/visualization-tool"
+            element={<DataVisualizationTool />}
+          />
 
           {/* Research Routes */}
           <Route path="/publications" element={<Publications />} />
@@ -79,6 +89,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
+        <Footer />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

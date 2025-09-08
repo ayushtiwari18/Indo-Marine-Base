@@ -16,7 +16,7 @@ const marineResearchTestimonials = [
       title: "Marine Ecologist",
       institution: "Marine Ecology Lab",
       handle: "@marine_ecology_lab",
-      avatar: "/api/placeholder/64/64",
+      avatar: "",
     },
     text: "This integrated platform has revolutionized our species identification workflows. The eDNA analysis tools helped us discover three new species in the Indian Ocean EEZ.",
     rating: 5,

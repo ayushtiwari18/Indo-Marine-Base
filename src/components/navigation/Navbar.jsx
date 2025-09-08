@@ -72,6 +72,7 @@ const Navbar = () => {
     {
       name: "Research",
       items: [
+        { name: "Data Visualization Tool", href: "/visualization-tool", icon: FlaskConical },
         { name: "Publications", href: "/publications", icon: FileText },
         { name: "Collaborations", href: "/collaborations", icon: Users },
         { name: "Projects", href: "/projects", icon: BookOpen },
