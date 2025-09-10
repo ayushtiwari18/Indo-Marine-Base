@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { saveAs } from "file-saver";
-import html2canvas from "html2canvas";
-import * as XLSX from "xlsx";
 
 const ExportManager = ({ chartData, chartConfig, chartType }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -47,7 +45,7 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
   ];
 
   const handleExport = async () => {
-    if (!chartData) {
+    if (!chartData || chartData.length === 0) {
       alert("No data available for export");
       return;
     }
@@ -86,123 +84,215 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
   };
 
   const exportAsPNG = async () => {
-    const chartElement = document.querySelector(".visualization-engine svg");
-    if (!chartElement) {
-      throw new Error("Chart not found");
+    try {
+      const chartElement = document.querySelector(".visualization-engine svg");
+      if (!chartElement) {
+        throw new Error("Chart not found");
+      }
+
+      // Use html2canvas for PNG export
+      const { default: html2canvas } = await import("html2canvas");
+
+      const canvas = await html2canvas(chartElement.parentElement, {
+        backgroundColor: "#1e293b",
+        scale: 2, // High resolution
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          saveAs(blob, `${getFileName()}.png`);
+        } else {
+          throw new Error("Failed to generate PNG");
+        }
+      }, "image/png");
+    } catch (error) {
+      throw new Error(`PNG export failed: ${error.message}`);
     }
-
-    const canvas = await html2canvas(chartElement.parentElement, {
-      backgroundColor: "#1e293b",
-      scale: 2, // High resolution
-      logging: false,
-    });
-
-    canvas.toBlob((blob) => {
-      saveAs(blob, `${getFileName()}.png`);
-    });
   };
 
   const exportAsSVG = async () => {
-    const svgElement = document.querySelector(".visualization-engine svg");
-    if (!svgElement) {
-      throw new Error("SVG chart not found");
+    try {
+      const svgElement = document.querySelector(".visualization-engine svg");
+      if (!svgElement) {
+        throw new Error("SVG chart not found");
+      }
+
+      // Clone the SVG to avoid modifying the original
+      const svgClone = svgElement.cloneNode(true);
+
+      // Add CSS styles to the SVG
+      const styleElement = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "style"
+      );
+      styleElement.textContent = `
+        .ocean-gradient { fill: url(#oceanGradient); }
+        text { font-family: system-ui, -apple-system, sans-serif; }
+        .bar { transition: none; }
+        .dot { transition: none; }
+      `;
+      svgClone.insertBefore(styleElement, svgClone.firstChild);
+
+      // Set proper dimensions
+      svgClone.setAttribute("width", chartConfig.width || "800");
+      svgClone.setAttribute("height", chartConfig.height || "500");
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgClone);
+
+      // Add XML declaration
+      const fullSvg = `<?xml version="1.0" encoding="UTF-8"?>\n${svgString}`;
+
+      const blob = new Blob([fullSvg], { type: "image/svg+xml" });
+      saveAs(blob, `${getFileName()}.svg`);
+    } catch (error) {
+      throw new Error(`SVG export failed: ${error.message}`);
     }
-
-    // Clone the SVG to avoid modifying the original
-    const svgClone = svgElement.cloneNode(true);
-
-    // Add styling information
-    const styleElement = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "style"
-    );
-    styleElement.textContent = `
-      .ocean-gradient { fill: url(#oceanGradient); }
-      text { font-family: system-ui, -apple-system, sans-serif; }
-    `;
-    svgClone.insertBefore(styleElement, svgClone.firstChild);
-
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svgClone);
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
-    saveAs(blob, `${getFileName()}.svg`);
   };
 
   const exportAsPDF = async () => {
-    // For PDF export, we'll use PNG conversion
-    // In a real application, you might want to use a library like jsPDF
-    const chartElement = document.querySelector(".visualization-engine svg");
-    if (!chartElement) {
-      throw new Error("Chart not found");
+    try {
+      // Dynamic import of jsPDF
+      const { jsPDF } = await import("jspdf");
+
+      const chartElement = document.querySelector(".visualization-engine svg");
+      if (!chartElement) {
+        throw new Error("Chart not found");
+      }
+
+      // Convert SVG to canvas first
+      const { default: html2canvas } = await import("html2canvas");
+
+      const canvas = await html2canvas(chartElement.parentElement, {
+        backgroundColor: "#1e293b",
+        scale: 2,
+        logging: false,
+        useCORS: true,
+      });
+
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height],
+      });
+
+      // Add title
+      pdf.setFontSize(16);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(chartConfig.title || "Data Visualization", 20, 30);
+
+      // Add chart image
+      const imgData = canvas.toDataURL("image/png");
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+
+      // Add metadata
+      pdf.setFontSize(10);
+      pdf.text(
+        `Generated: ${new Date().toLocaleString()}`,
+        20,
+        canvas.height - 20
+      );
+      pdf.text(
+        `Records: ${chartData.length.toLocaleString()}`,
+        20,
+        canvas.height - 10
+      );
+
+      // Save PDF
+      pdf.save(`${getFileName()}.pdf`);
+    } catch (error) {
+      throw new Error(`PDF export failed: ${error.message}`);
     }
-
-    const canvas = await html2canvas(chartElement.parentElement, {
-      backgroundColor: "#1e293b",
-      scale: 2,
-    });
-
-    // Simple PDF creation (you might want to use jsPDF for better control)
-    canvas.toBlob((blob) => {
-      saveAs(blob, `${getFileName()}.png`); // Fallback to PNG
-      alert("PDF export is not fully implemented. Exported as PNG instead.");
-    });
   };
 
   const exportAsCSV = async () => {
-    if (!chartData || !Array.isArray(chartData)) {
-      throw new Error("Invalid data for CSV export");
-    }
+    try {
+      if (!chartData || !Array.isArray(chartData)) {
+        throw new Error("Invalid data for CSV export");
+      }
 
-    const csvContent = convertToCSV(chartData);
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `${getFileName()}.csv`);
+      const csvContent = convertToCSV(chartData);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      saveAs(blob, `${getFileName()}.csv`);
+    } catch (error) {
+      throw new Error(`CSV export failed: ${error.message}`);
+    }
   };
 
   const exportAsJSON = async () => {
-    const exportData = {
-      metadata: {
-        chartType: chartType,
-        config: chartConfig,
-        exportedAt: new Date().toISOString(),
-        recordCount: chartData.length,
-      },
-      data: chartData,
-    };
+    try {
+      const exportData = {
+        metadata: {
+          chartType: chartType,
+          config: chartConfig,
+          exportedAt: new Date().toISOString(),
+          recordCount: chartData.length,
+          columns: Object.keys(chartData[0] || {}),
+        },
+        data: chartData,
+      };
 
-    const jsonString = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    saveAs(blob, `${getFileName()}.json`);
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      saveAs(blob, `${getFileName()}.json`);
+    } catch (error) {
+      throw new Error(`JSON export failed: ${error.message}`);
+    }
   };
 
   const exportAsExcel = async () => {
-    const workbook = XLSX.utils.book_new();
+    try {
+      // Dynamic import of xlsx library
+      const XLSX = await import("xlsx");
 
-    // Main data sheet
-    const dataSheet = XLSX.utils.json_to_sheet(chartData);
-    XLSX.utils.book_append_sheet(workbook, dataSheet, "Data");
+      const workbook = XLSX.utils.book_new();
 
-    // Metadata sheet
-    const metadata = {
-      "Chart Type": chartType,
-      Title: chartConfig.title || "Untitled Chart",
-      "Records Count": chartData.length,
-      "Columns Count": Object.keys(chartData[0] || {}).length,
-      "Exported At": new Date().toLocaleString(),
-      "Export Format": "Excel Workbook",
-    };
+      // Main data sheet
+      const dataSheet = XLSX.utils.json_to_sheet(chartData);
 
-    const metadataSheet = XLSX.utils.json_to_sheet([metadata]);
-    XLSX.utils.book_append_sheet(workbook, metadataSheet, "Metadata");
+      // Add column widths for better formatting
+      const cols = Object.keys(chartData[0] || {}).map(() => ({ wch: 15 }));
+      dataSheet["!cols"] = cols;
 
-    // Generate Excel file
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${getFileName()}.xlsx`);
+      XLSX.utils.book_append_sheet(workbook, dataSheet, "Data");
+
+      // Metadata sheet
+      const metadata = [
+        { Property: "Chart Type", Value: chartType },
+        { Property: "Title", Value: chartConfig.title || "Untitled Chart" },
+        { Property: "Records Count", Value: chartData.length },
+        {
+          Property: "Columns Count",
+          Value: Object.keys(chartData[0] || {}).length,
+        },
+        { Property: "Exported At", Value: new Date().toLocaleString() },
+        { Property: "Export Format", Value: "Excel Workbook" },
+      ];
+
+      const metadataSheet = XLSX.utils.json_to_sheet(metadata);
+      XLSX.utils.book_append_sheet(workbook, metadataSheet, "Metadata");
+
+      // Chart configuration sheet if available
+      if (chartConfig && Object.keys(chartConfig).length > 0) {
+        const configData = Object.entries(chartConfig).map(([key, value]) => ({
+          Setting: key,
+          Value:
+            typeof value === "object" ? JSON.stringify(value) : String(value),
+        }));
+
+        const configSheet = XLSX.utils.json_to_sheet(configData);
+        XLSX.utils.book_append_sheet(workbook, configSheet, "Configuration");
+      }
+
+      // Generate Excel file
+      const excelBuffer = XLSX.writeFile(workbook, `${getFileName()}.xlsx`);
+    } catch (error) {
+      throw new Error(`Excel export failed: ${error.message}`);
+    }
   };
 
   const convertToCSV = (data) => {
@@ -213,11 +303,21 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
 
     data.forEach((row) => {
       const values = headers.map((header) => {
-        const value = row[header];
+        let value = row[header];
+
+        // Handle null/undefined
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        // Convert to string
+        value = String(value);
+
         // Escape commas and quotes in CSV
         if (
-          typeof value === "string" &&
-          (value.includes(",") || value.includes('"'))
+          value.includes(",") ||
+          value.includes('"') ||
+          value.includes("\n")
         ) {
           return `"${value.replace(/"/g, '""')}"`;
         }
@@ -230,33 +330,113 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
   };
 
   const getFileName = () => {
-    const title = chartConfig.title || "marine-chart";
+    const title = (chartConfig.title || "marine-chart")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
     const timestamp = new Date()
       .toISOString()
       .slice(0, 19)
       .replace(/[:.]/g, "-");
-    return `${title.toLowerCase().replace(/\s+/g, "-")}-${timestamp}`;
+
+    return `${title}-${timestamp}`;
   };
 
   const getFileSizeEstimate = () => {
-    if (!chartData) return "0 KB";
+    if (!chartData || chartData.length === 0) return "0 KB";
 
     const dataSize = JSON.stringify(chartData).length;
     const kb = Math.round(dataSize / 1024);
 
     switch (exportFormat) {
       case "png":
-        return `~${Math.round(kb * 3)} KB`; // Images are typically larger
+        return `~${Math.round(kb * 2)} KB`; // Images are typically larger
       case "svg":
-        return `~${Math.round(kb * 0.5)} KB`; // SVG is more compact
+        return `~${Math.round(kb * 0.3)} KB`; // SVG is more compact
+      case "pdf":
+        return `~${Math.round(kb * 3)} KB`; // PDF has overhead
       case "csv":
-        return `~${Math.round(kb * 0.8)} KB`; // CSV is compact
+        return `~${Math.round(kb * 0.7)} KB`; // CSV is compact
       case "json":
-        return `~${kb} KB`;
+        return `~${Math.round(kb * 1.2)} KB`; // JSON has structure overhead
       case "excel":
         return `~${Math.round(kb * 1.5)} KB`; // Excel has overhead
       default:
         return `~${kb} KB`;
+    }
+  };
+
+  // Share functionality
+  const handleShare = async (method) => {
+    try {
+      switch (method) {
+        case "link":
+          await copyShareableLink();
+          break;
+        case "email":
+          await emailVisualization();
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+      alert("Share failed: " + error.message);
+    }
+  };
+
+  const copyShareableLink = async () => {
+    try {
+      // Create a shareable state object
+      const shareData = {
+        chartType,
+        config: chartConfig,
+        dataHash: btoa(JSON.stringify(chartData)).slice(0, 100), // Truncated hash
+        timestamp: Date.now(),
+      };
+
+      const shareUrl = `${window.location.origin}${
+        window.location.pathname
+      }?share=${btoa(JSON.stringify(shareData))}`;
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Shareable link copied to clipboard!");
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        alert("Shareable link copied to clipboard!");
+      }
+    } catch (error) {
+      throw new Error(`Failed to copy link: ${error.message}`);
+    }
+  };
+
+  const emailVisualization = () => {
+    try {
+      const subject = encodeURIComponent(
+        `Data Visualization: ${chartConfig.title || "Marine Data Chart"}`
+      );
+      const body = encodeURIComponent(
+        `I've created a data visualization that might interest you:\n\n` +
+          `Chart Type: ${chartType}\n` +
+          `Title: ${chartConfig.title || "Untitled"}\n` +
+          `Data Points: ${chartData.length.toLocaleString()}\n` +
+          `Generated: ${new Date().toLocaleString()}\n\n` +
+          `You can view this visualization using the Marine Biodiversity Data Tool.`
+      );
+
+      const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+      window.open(mailtoUrl);
+    } catch (error) {
+      throw new Error(`Failed to create email: ${error.message}`);
     }
   };
 
@@ -305,57 +485,6 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
         </div>
       </div>
 
-      {/* Export Options */}
-      <div className="mb-6 p-4 bg-slate-800/30 rounded-lg">
-        <h4 className="text-white font-semibold mb-3 text-sm">
-          ⚙️ Export Options
-        </h4>
-
-        {(exportFormat === "png" || exportFormat === "svg") && (
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-slate-300 text-sm">
-              <input
-                type="checkbox"
-                defaultChecked={true}
-                className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
-              />
-              Include chart title and legends
-            </label>
-            <label className="flex items-center gap-2 text-slate-300 text-sm">
-              <input
-                type="checkbox"
-                defaultChecked={false}
-                className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
-              />
-              High resolution (2x scaling)
-            </label>
-          </div>
-        )}
-
-        {(exportFormat === "csv" ||
-          exportFormat === "json" ||
-          exportFormat === "excel") && (
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-slate-300 text-sm">
-              <input
-                type="checkbox"
-                defaultChecked={true}
-                className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
-              />
-              Include metadata and chart configuration
-            </label>
-            <label className="flex items-center gap-2 text-slate-300 text-sm">
-              <input
-                type="checkbox"
-                defaultChecked={false}
-                className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
-              />
-              Export only visible/filtered data
-            </label>
-          </div>
-        )}
-      </div>
-
       {/* Export Summary */}
       <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
         <div className="flex items-start gap-3">
@@ -374,7 +503,7 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
                 {exportFormats.find((f) => f.value === exportFormat)?.label}
               </div>
               <div>💾 Estimated Size: {getFileSizeEstimate()}</div>
-              <div>🔢 Records: {chartData?.length.toLocaleString() || 0}</div>
+              <div>🔢 Records: {chartData?.length?.toLocaleString() || 0}</div>
             </div>
           </div>
         </div>
@@ -383,9 +512,9 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
       {/* Export Button */}
       <button
         onClick={handleExport}
-        disabled={isExporting || !chartData}
+        disabled={isExporting || !chartData || chartData.length === 0}
         className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-          isExporting || !chartData
+          isExporting || !chartData || chartData.length === 0
             ? "bg-slate-600 text-slate-400 cursor-not-allowed"
             : "ocean-btn-primary hover:scale-105"
         }`}
@@ -413,7 +542,7 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
             setExportFormat("png");
             setTimeout(handleExport, 100);
           }}
-          disabled={isExporting || !chartData}
+          disabled={isExporting || !chartData || chartData.length === 0}
           className="px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm text-slate-200 transition-colors disabled:opacity-50"
         >
           🖼️ Quick PNG
@@ -423,7 +552,7 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
             setExportFormat("csv");
             setTimeout(handleExport, 100);
           }}
-          disabled={isExporting || !chartData}
+          disabled={isExporting || !chartData || chartData.length === 0}
           className="px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm text-slate-200 transition-colors disabled:opacity-50"
         >
           📊 Quick CSV
@@ -436,11 +565,17 @@ const ExportManager = ({ chartData, chartConfig, chartType }) => {
           🔗 Share & Collaborate
         </h4>
         <div className="grid grid-cols-1 gap-2">
-          <button className="flex items-center gap-2 p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-sm text-slate-200">
+          <button
+            onClick={() => handleShare("link")}
+            className="flex items-center gap-2 p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-sm text-slate-200"
+          >
             <span>📋</span>
             <span>Copy shareable link</span>
           </button>
-          <button className="flex items-center gap-2 p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-sm text-slate-200">
+          <button
+            onClick={() => handleShare("email")}
+            className="flex items-center gap-2 p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors text-sm text-slate-200"
+          >
             <span>📧</span>
             <span>Email visualization</span>
           </button>

@@ -41,58 +41,61 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Navbar />
-        <Routes>
-          {/* Landing Page */}
-          <Route path="/" element={<Index />} />
+        <div className="min-h-screen bg-slate-900 pt-20">
+          <Routes>
+            {/* Landing Page */}
+            <Route path="/" element={<Index />} />
 
-          {/* Authentication Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+            {/* Authentication Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
 
-          {/* New Visualization Tool Route */}
-          <Route
-            path="/visualization-tool"
-            element={<DataVisualizationTool />}
-          />
+            {/* MAIN DASHBOARD (matches architecture) */}
+            <Route path="/dashboard" element={<Home />} />
 
-          {/* Research Routes */}
-          <Route path="/analytics" element={<TableauDashboard />} />
-          <Route path="/publications" element={<Publications />} />
-          <Route path="/collaborations" element={<Collaborations />} />
-          <Route path="/projects" element={<Projects />} />
-
-          {/* Additional Platform Features */}
-          <Route path="/api-access" element={<APIAccess />} />
-          <Route path="/species-database" element={<SpeciesDatabase />} />
-          <Route path="/research-tools" element={<ResearchTools />} />
-          <Route path="/data-explorer" element={<DataExplorer />} />
-          <Route path="/documentation" element={<Documentation />} />
-
-          {/* User Routes */}
-          <Route path="/profile" element={<Profile />} />
-
-          {/* Admin Routes */}
-
-          {/* Information Pages */}
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-
-          {/* Main Application Routes */}
-          <Route path="/dashboard" element={<Home />} />
-          <Route element={<Layout />}>
-            {/* Platform Routes */}
-
+            {/* DATA EXPLORER SUITE (matches architecture) */}
+            <Route path="/data-explorer" element={<DataExplorer />} />
             <Route path="/datasets" element={<Datasets />} />
-            <Route path="/visualization" element={<Visualization />} />
-            <Route path="/ai-tools" element={<AITools />} />
+            <Route path="/species-database" element={<SpeciesDatabase />} />
 
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* VISUALIZATION & MAPPING (matches architecture) */}
+            <Route path="/visualization" element={<Visualization />} />
+            <Route
+              path="/visualization-tool"
+              element={<DataVisualizationTool />}
+            />
+
+            {/* AI RESEARCH HUB (matches architecture) */}
+            <Route path="/ai-tools" element={<AITools />} />
+            <Route path="/research-tools" element={<ResearchTools />} />
+
+            {/* ANALYTICS DASHBOARD (matches architecture) */}
+            <Route path="/analytics" element={<TableauDashboard />} />
+
+            {/* COLLABORATION PLATFORM (matches architecture) */}
+            <Route path="/collaborations" element={<Collaborations />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/publications" element={<Publications />} />
+
+            {/* BACKEND API ACCESS (matches architecture) */}
+            <Route path="/api-access" element={<APIAccess />} />
+            <Route path="/documentation" element={<Documentation />} />
+
+            {/* Admin Routes */}
+            <Route element={<Layout />}>
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            </Route>
+
+            {/* Information Pages */}
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/outreach" element={<Outreach />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
+          </Routes>
+        </div>
         <Footer />
       </BrowserRouter>
     </TooltipProvider>

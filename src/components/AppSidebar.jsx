@@ -24,11 +24,9 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { title: "Home", url: "/dashboard", icon: Home },
   { title: "Datasets", url: "/datasets", icon: Database },
   { title: "Visualization", url: "/visualization", icon: BarChart3 },
   { title: "AI Tools", url: "/ai-tools", icon: Brain },
-  { title: "API Access", url: "/api-access", icon: Globe },
   { title: "Admin Dashboard", url: "/admin", icon: Shield },
   { title: "Outreach", url: "/outreach", icon: Heart },
 ];
@@ -79,7 +77,7 @@ export function AppSidebar() {
         <div className="absolute bottom-32 -left-6 w-28 h-28 bg-cyan-300/5 rounded-full blur-xl"></div>
       </div>
 
-      {/* Header - Fixed at top */}
+      {/* Header - Fixed at top
       <div className="border-b border-cyan-500/20 p-6 relative z-10 flex-shrink-0">
         <div ref={logoRef} className="flex items-center gap-3">
           <div className="relative">
@@ -93,7 +91,7 @@ export function AppSidebar() {
             <p className="text-sm text-cyan-400/80">Marine Data Platform</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Content - Scrollable area */}
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">

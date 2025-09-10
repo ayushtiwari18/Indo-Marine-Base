@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import VisualizationEngine from "./VisualizationEngine";
 
 const ChartContainer = ({
@@ -11,16 +11,45 @@ const ChartContainer = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [chartReady, setChartReady] = useState(false);
+  const [chartError, setChartError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef(null);
 
+  // Reset chart ready state when chart type or config changes
+  useEffect(() => {
+    if (chartType && data) {
+      setChartReady(false);
+      setChartError(null);
+      setIsLoading(true);
+    }
+  }, [chartType, config, data]);
+
   const handleFullscreen = () => {
+    if (!isFullscreen && containerRef.current) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
     setIsFullscreen(!isFullscreen);
   };
 
   const handleChartReady = (svgNode) => {
     setChartReady(true);
+    setIsLoading(false);
+    setChartError(null);
   };
 
+  const handleChartError = (error) => {
+    setChartError(error);
+    setIsLoading(false);
+    setChartReady(false);
+  };
+
+  // Enhanced step content rendering
   const renderStepContent = () => {
     switch (currentStep) {
       case "upload":
@@ -30,9 +59,14 @@ const ChartContainer = ({
             <h3 className="text-xl font-bold text-white mb-2">
               Ready for Your Data
             </h3>
-            <p className="text-slate-300">
+            <p className="text-slate-300 mb-4">
               Upload a file to get started with intelligent visualizations
             </p>
+            <div className="bg-slate-800/50 rounded-lg p-4 text-sm text-slate-400">
+              <p>💡 Supported formats: CSV, JSON, Excel, XML, TSV, TXT</p>
+              <p>🚀 AI-powered chart recommendations</p>
+              <p>🌊 Marine biodiversity optimized</p>
+            </div>
           </div>
         );
 
@@ -47,11 +81,29 @@ const ChartContainer = ({
               🔍 Analyzing Your Data
             </h3>
             <p className="text-slate-300 mb-4">
-              Detecting data types and generating insights...
+              Our AI is examining your data structure, types, and patterns...
             </p>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-              <span>Processing {data?.length || 0} records</span>
+            <div className="space-y-2 text-sm text-slate-400">
+              <div className="flex items-center gap-2 justify-center">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span>
+                  Processing {data?.length?.toLocaleString() || 0} records
+                </span>
+              </div>
+              <div
+                className="flex items-center gap-2 justify-center"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <span>Detecting column types and patterns</span>
+              </div>
+              <div
+                className="flex items-center gap-2 justify-center"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                <span>Generating intelligent recommendations</span>
+              </div>
             </div>
           </div>
         );
@@ -65,23 +117,37 @@ const ChartContainer = ({
                 Choose Your Visualization
               </h3>
               <p className="text-slate-300 mb-4">
-                Select a chart type from the recommendations panel
+                Select a chart type from the AI recommendations panel
               </p>
               {dataAnalysis && (
-                <div className="bg-slate-800/50 rounded-lg p-4 text-left">
+                <div className="bg-slate-800/50 rounded-lg p-4 text-left max-w-md">
                   <h4 className="text-cyan-400 font-semibold mb-2 text-sm">
-                    Data Summary:
+                    Data Analysis Complete:
                   </h4>
                   <div className="text-xs text-slate-300 space-y-1">
-                    <div>
-                      📊 {dataAnalysis.rowCount.toLocaleString()} rows,{" "}
-                      {dataAnalysis.columnCount} columns
+                    <div className="flex justify-between">
+                      <span>📊 Records:</span>
+                      <span className="text-cyan-400">
+                        {dataAnalysis.rowCount.toLocaleString()}
+                      </span>
                     </div>
-                    <div>
-                      🔢{" "}
-                      {Object.entries(dataAnalysis.summary.dataTypes)
-                        .map(([type, count]) => `${count} ${type}`)
-                        .join(", ")}
+                    <div className="flex justify-between">
+                      <span>📋 Columns:</span>
+                      <span className="text-cyan-400">
+                        {dataAnalysis.columnCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🔢 Data Types:</span>
+                      <span className="text-cyan-400">
+                        {Object.keys(dataAnalysis.summary.dataTypes).length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>🎯 Recommendations:</span>
+                      <span className="text-green-400">
+                        {dataAnalysis.recommendations?.length || 0}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -98,6 +164,7 @@ const ChartContainer = ({
     return null;
   };
 
+  // Don't show container if we're not ready for visualization
   if (
     (currentStep !== "customize" && currentStep !== "visualize") ||
     !chartType
@@ -122,15 +189,14 @@ const ChartContainer = ({
                   : "bg-cyan-500/20 text-cyan-400"
               }`}
             >
-              {currentStep === "upload" && "⏳ Waiting"}
-              {currentStep === "analyze" && "🔍 Analyzing"}
-              {currentStep === "visualize" && "🎯 Ready"}
+              {currentStep === "upload" && "⏳ Waiting for data"}
+              {currentStep === "analyze" && "🔍 Analyzing structure"}
+              {currentStep === "visualize" && "🎯 Ready to visualize"}
             </div>
           </div>
         </div>
 
-        <div className="relative bg-slate-800/30 rounded-lg overflow-hidden">
-          {/* Marine Background Animation */}
+        <div className="relative bg-slate-800/30 rounded-lg overflow-hidden min-h-[500px]">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-cyan-400/5 rounded-full animate-pulse"></div>
             <div
@@ -141,9 +207,10 @@ const ChartContainer = ({
               className="absolute top-1/2 right-1/3 w-16 h-16 bg-teal-400/5 rounded-full animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
           </div>
 
-          {renderStepContent()}
+          <div className="relative z-10">{renderStepContent()}</div>
         </div>
       </div>
     );
@@ -163,7 +230,7 @@ const ChartContainer = ({
             {config.title || "Data Visualization"}
           </h3>
           <p className="text-slate-300 text-sm">
-            {config.description || "Interactive chart powered by D3.js"}
+            {config.description || "Interactive chart powered by D3.js and AI"}
           </p>
         </div>
 
@@ -171,12 +238,22 @@ const ChartContainer = ({
           {/* Chart Status */}
           <div
             className={`px-3 py-1 rounded-full text-xs font-medium ${
-              chartReady
+              chartError
+                ? "bg-red-500/20 text-red-400"
+                : chartReady
                 ? "bg-green-500/20 text-green-400"
-                : "bg-yellow-500/20 text-yellow-400"
+                : isLoading
+                ? "bg-yellow-500/20 text-yellow-400"
+                : "bg-slate-600 text-slate-300"
             }`}
           >
-            {chartReady ? "✅ Ready" : "⏳ Loading"}
+            {chartError
+              ? "❌ Error"
+              : chartReady
+              ? "✅ Ready"
+              : isLoading
+              ? "⏳ Loading"
+              : "⏸️ Waiting"}
           </div>
 
           {/* Fullscreen Toggle */}
@@ -192,8 +269,26 @@ const ChartContainer = ({
 
       {/* Chart Area */}
       <div className="relative bg-slate-800/30 rounded-lg overflow-hidden">
+        {/* Error Display */}
+        {chartError && (
+          <div className="absolute inset-0 bg-red-900/20 backdrop-blur-sm z-20 flex items-center justify-center">
+            <div className="text-center p-6 bg-slate-900/90 rounded-lg max-w-md">
+              <span className="text-4xl mb-2 block">⚠️</span>
+              <h4 className="text-red-400 font-semibold mb-2">
+                Visualization Error
+              </h4>
+              <p className="text-slate-300 text-sm mb-3">{chartError}</p>
+              <div className="text-xs text-slate-400">
+                <p>• Check that your data columns are properly formatted</p>
+                <p>• Ensure required columns are selected</p>
+                <p>• Try a different chart type for this data</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading Overlay */}
-        {isProcessing && (
+        {(isProcessing || isLoading) && (
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-10 flex items-center justify-center">
             <div className="text-center">
               <div className="relative mb-4">
@@ -201,7 +296,12 @@ const ChartContainer = ({
                 <div className="absolute inset-0 w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
               <p className="text-cyan-400 font-semibold">
-                Generating Visualization...
+                {isProcessing
+                  ? "Processing Data..."
+                  : "Generating Visualization..."}
+              </p>
+              <p className="text-slate-400 text-sm mt-1">
+                {chartType && `Creating ${chartType} chart`}
               </p>
             </div>
           </div>
@@ -209,23 +309,35 @@ const ChartContainer = ({
 
         {/* Chart Container */}
         <div className="p-4">
-          {data && chartType && (
+          {data && chartType && config && (
             <VisualizationEngine
               data={data}
               chartType={chartType}
-              config={config}
+              config={{
+                ...config,
+                columns: config.columns,
+                xColumn: config.xColumn,
+                yColumn: config.yColumn,
+                dateColumn: config.dateColumn,
+                valueColumn: config.valueColumn,
+                latColumn: config.latColumn,
+                lonColumn: config.lonColumn,
+                categoryColumn: config.categoryColumn,
+                column: config.column,
+              }}
               onChartReady={handleChartReady}
+              onError={handleChartError}
             />
           )}
         </div>
 
         {/* Chart Info Overlay */}
-        {chartReady && (
-          <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm rounded-lg p-3">
+        {chartReady && !chartError && (
+          <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-sm rounded-lg p-3 max-w-xs">
             <div className="text-xs text-slate-300 space-y-1">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
-                <span>{data?.length.toLocaleString()} data points</span>
+                <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                <span>{data?.length?.toLocaleString()} data points</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -233,7 +345,7 @@ const ChartContainer = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-teal-400 rounded-full"></span>
-                <span>Ocean-themed styling</span>
+                <span>AI-optimized styling</span>
               </div>
             </div>
           </div>
@@ -242,45 +354,34 @@ const ChartContainer = ({
 
       {/* Chart Statistics */}
       {chartReady && dataAnalysis && (
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-cyan-400">
-              {dataAnalysis.rowCount.toLocaleString()}
+        <div className="mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-cyan-400 mb-1">
+                {data?.length?.toLocaleString() || 0}
+              </div>
+              <div className="text-xs text-slate-400">📊 Records</div>
             </div>
-            <div className="text-xs text-slate-400">Records</div>
-          </div>
-          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-blue-400">
-              {dataAnalysis.columnCount}
+            <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-blue-400 mb-1">
+                {dataAnalysis.columnCount || 0}
+              </div>
+              <div className="text-xs text-slate-400">📋 Columns</div>
             </div>
-            <div className="text-xs text-slate-400">Columns</div>
-          </div>
-          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-teal-400">
-              {Object.values(dataAnalysis.summary.dataTypes).reduce(
-                (a, b) => a + b,
-                0
-              )}
+            <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-teal-400 mb-1">
+                {Object.keys(dataAnalysis.summary?.dataTypes || {}).length}
+              </div>
+              <div className="text-xs text-slate-400">🔢 Data Types</div>
             </div>
-            <div className="text-xs text-slate-400">Data Types</div>
-          </div>
-          <div className="bg-slate-800/30 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-green-400">
-              {chartType.charAt(0).toUpperCase() + chartType.slice(1)}
+            <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-green-400 mb-1">
+                {chartType?.charAt(0).toUpperCase() + chartType?.slice(1) ||
+                  "None"}
+              </div>
+              <div className="text-xs text-slate-400">📈 Chart Type</div>
             </div>
-            <div className="text-xs text-slate-400">Chart Type</div>
           </div>
-        </div>
-      )}
-
-      {/* Marine Background Effects for Fullscreen */}
-      {isFullscreen && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="floating-sphere floating-sphere-1"></div>
-          <div className="floating-sphere floating-sphere-2"></div>
-          <div className="floating-sphere floating-sphere-3"></div>
-          <div className="ocean-wave-line"></div>
-          <div className="ocean-wave-glow"></div>
         </div>
       )}
     </div>

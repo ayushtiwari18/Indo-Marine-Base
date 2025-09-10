@@ -51,6 +51,79 @@ const CustomizationPanel = ({
     onConfigChange({ [key]: value });
   };
 
+  const handleChartTypeChange = (newChartType) => {
+    // Reset config when chart type changes
+    const newConfig = {
+      chartType: newChartType,
+      title: config.title || "",
+      colorScheme: config.colorScheme || "ocean",
+      width: config.width || "800",
+      height: config.height || "500",
+      animated: config.animated !== false,
+    };
+
+    // Set appropriate default columns based on chart type and available data
+    const availableColumns = Object.keys(dataAnalysis.columns || {});
+    const numericColumns = availableColumns.filter(
+      (col) => dataAnalysis.dataTypes[col] === "numeric"
+    );
+    const categoricalColumns = availableColumns.filter(
+      (col) =>
+        dataAnalysis.dataTypes[col] === "categorical" ||
+        dataAnalysis.dataTypes[col] === "species"
+    );
+    const dateColumns = availableColumns.filter(
+      (col) => dataAnalysis.dataTypes[col] === "date"
+    );
+
+    switch (newChartType) {
+      case "scatter":
+        if (numericColumns.length >= 2) {
+          newConfig.xColumn = numericColumns[0];
+          newConfig.yColumn = numericColumns[1];
+        }
+        break;
+      case "histogram":
+        if (numericColumns.length >= 1) {
+          newConfig.column = numericColumns[0];
+          newConfig.bins = 20;
+        }
+        break;
+      case "bar":
+        if (categoricalColumns.length >= 1) {
+          newConfig.categoryColumn = categoricalColumns[0];
+        }
+        break;
+      case "map":
+        const latColumns = availableColumns.filter((col) =>
+          col.toLowerCase().includes("lat")
+        );
+        const lonColumns = availableColumns.filter(
+          (col) =>
+            col.toLowerCase().includes("lon") ||
+            col.toLowerCase().includes("lng")
+        );
+        if (latColumns.length >= 1 && lonColumns.length >= 1) {
+          newConfig.latColumn = latColumns[0];
+          newConfig.lonColumn = lonColumns[0];
+        }
+        break;
+      case "timeline":
+        if (dateColumns.length >= 1 && numericColumns.length >= 1) {
+          newConfig.dateColumn = dateColumns[0];
+          newConfig.valueColumn = numericColumns[0];
+        }
+        break;
+      case "biodiversity-treemap":
+        if (categoricalColumns.length >= 1) {
+          newConfig.columns = [categoricalColumns[0]];
+        }
+        break;
+    }
+
+    onConfigChange(newConfig);
+  };
+
   const getAvailableColumns = (type = "all") => {
     if (!dataAnalysis.columns) return [];
 
@@ -171,6 +244,38 @@ const CustomizationPanel = ({
           />
           ✨ Enable Animations
         </label>
+        <p className="text-slate-400 text-xs mt-1 ml-6">
+          Smooth transitions and entrance effects
+        </p>
+      </div>
+
+      {/* Background Options */}
+      <div>
+        <label className="block text-white font-semibold mb-3 text-sm">
+          🖼️ Background Style
+        </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-slate-300 text-sm">
+            <input
+              type="radio"
+              name="background"
+              checked={config.backgroundStyle !== "solid"}
+              onChange={() => handleConfigChange("backgroundStyle", "gradient")}
+              className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600"
+            />
+            Gradient background
+          </label>
+          <label className="flex items-center gap-2 text-slate-300 text-sm">
+            <input
+              type="radio"
+              name="background"
+              checked={config.backgroundStyle === "solid"}
+              onChange={() => handleConfigChange("backgroundStyle", "solid")}
+              className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600"
+            />
+            Solid background
+          </label>
+        </div>
       </div>
     </div>
   );
@@ -186,7 +291,7 @@ const CustomizationPanel = ({
           {chartTypes.map((type) => (
             <button
               key={type.type}
-              onClick={() => onConfigChange({ chartType: type.type })}
+              onClick={() => handleChartTypeChange(type.type)}
               className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-sm ${
                 chartType === type.type
                   ? "border-cyan-400 bg-cyan-500/10 text-cyan-400"
@@ -205,7 +310,7 @@ const CustomizationPanel = ({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-white font-semibold mb-2 text-sm">
-              X Axis
+              X Axis Column
             </label>
             <select
               value={config.xColumn || ""}
@@ -215,14 +320,14 @@ const CustomizationPanel = ({
               <option value="">Select column...</option>
               {getAvailableColumns("numeric").map((col) => (
                 <option key={col} value={col}>
-                  {col}
+                  {col} ({dataAnalysis.columns[col]?.count || 0} values)
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-white font-semibold mb-2 text-sm">
-              Y Axis
+              Y Axis Column
             </label>
             <select
               value={config.yColumn || ""}
@@ -232,7 +337,7 @@ const CustomizationPanel = ({
               <option value="">Select column...</option>
               {getAvailableColumns("numeric").map((col) => (
                 <option key={col} value={col}>
-                  {col}
+                  {col} ({dataAnalysis.columns[col]?.count || 0} values)
                 </option>
               ))}
             </select>
@@ -243,7 +348,7 @@ const CustomizationPanel = ({
       {chartType === "histogram" && (
         <div>
           <label className="block text-white font-semibold mb-2 text-sm">
-            Column
+            Data Column
           </label>
           <select
             value={config.column || ""}
@@ -253,7 +358,7 @@ const CustomizationPanel = ({
             <option value="">Select column...</option>
             {getAvailableColumns("numeric").map((col) => (
               <option key={col} value={col}>
-                {col}
+                {col} ({dataAnalysis.columns[col]?.count || 0} values)
               </option>
             ))}
           </select>
@@ -269,8 +374,12 @@ const CustomizationPanel = ({
               onChange={(e) =>
                 handleConfigChange("bins", parseInt(e.target.value))
               }
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
             />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>5</span>
+              <span>50</span>
+            </div>
           </div>
         </div>
       )}
@@ -290,10 +399,18 @@ const CustomizationPanel = ({
             <option value="">Select column...</option>
             {getAvailableColumns("categorical").map((col) => (
               <option key={col} value={col}>
-                {col}
+                {col} ({dataAnalysis.columns[col]?.uniqueValues || 0}{" "}
+                categories)
               </option>
             ))}
           </select>
+          {config.categoryColumn &&
+            dataAnalysis.columns[config.categoryColumn] && (
+              <div className="mt-2 text-xs text-slate-400">
+                {dataAnalysis.columns[config.categoryColumn].uniqueValues}{" "}
+                unique categories found
+              </div>
+            )}
         </div>
       )}
 
@@ -301,7 +418,7 @@ const CustomizationPanel = ({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-white font-semibold mb-2 text-sm">
-              Latitude
+              Latitude Column
             </label>
             <select
               value={config.latColumn || ""}
@@ -309,16 +426,22 @@ const CustomizationPanel = ({
               className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:border-cyan-400 focus:outline-none"
             >
               <option value="">Select column...</option>
-              {getAvailableColumns("numeric").map((col) => (
-                <option key={col} value={col}>
-                  {col}
-                </option>
-              ))}
+              {getAvailableColumns("all")
+                .filter(
+                  (col) =>
+                    col.toLowerCase().includes("lat") ||
+                    dataAnalysis.dataTypes[col] === "geographic"
+                )
+                .map((col) => (
+                  <option key={col} value={col}>
+                    {col}
+                  </option>
+                ))}
             </select>
           </div>
           <div>
             <label className="block text-white font-semibold mb-2 text-sm">
-              Longitude
+              Longitude Column
             </label>
             <select
               value={config.lonColumn || ""}
@@ -326,11 +449,18 @@ const CustomizationPanel = ({
               className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:border-cyan-400 focus:outline-none"
             >
               <option value="">Select column...</option>
-              {getAvailableColumns("numeric").map((col) => (
-                <option key={col} value={col}>
-                  {col}
-                </option>
-              ))}
+              {getAvailableColumns("all")
+                .filter(
+                  (col) =>
+                    col.toLowerCase().includes("lon") ||
+                    col.toLowerCase().includes("lng") ||
+                    dataAnalysis.dataTypes[col] === "geographic"
+                )
+                .map((col) => (
+                  <option key={col} value={col}>
+                    {col}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -348,8 +478,13 @@ const CustomizationPanel = ({
               className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:border-cyan-400 focus:outline-none"
             >
               <option value="">Select column...</option>
-              {getAvailableColumns("date")
-                .concat(getAvailableColumns("all"))
+              {getAvailableColumns("all")
+                .filter(
+                  (col) =>
+                    dataAnalysis.dataTypes[col] === "date" ||
+                    col.toLowerCase().includes("date") ||
+                    col.toLowerCase().includes("time")
+                )
                 .map((col) => (
                   <option key={col} value={col}>
                     {col}
@@ -379,6 +514,27 @@ const CustomizationPanel = ({
         </div>
       )}
 
+      {chartType === "biodiversity-treemap" && (
+        <div>
+          <label className="block text-white font-semibold mb-2 text-sm">
+            Species/Category Column
+          </label>
+          <select
+            value={config.columns?.[0] || ""}
+            onChange={(e) => handleConfigChange("columns", [e.target.value])}
+            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-slate-200 text-sm focus:border-cyan-400 focus:outline-none"
+          >
+            <option value="">Select column...</option>
+            {getAvailableColumns("categorical").map((col) => (
+              <option key={col} value={col}>
+                {col} ({dataAnalysis.columns[col]?.uniqueValues || 0} unique
+                values)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Data Filtering */}
       <div>
         <label className="block text-white font-semibold mb-2 text-sm">
@@ -398,7 +554,9 @@ const CustomizationPanel = ({
               <option value="500">500 records</option>
               <option value="1000">1,000 records</option>
               <option value="5000">5,000 records</option>
-              <option value="all">All records</option>
+              <option value="all">
+                All records ({dataAnalysis.rowCount?.toLocaleString()})
+              </option>
             </select>
           </div>
           <div>
@@ -411,7 +569,7 @@ const CustomizationPanel = ({
                 }
                 className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
               />
-              Remove statistical outliers
+              Remove statistical outliers (for numeric data)
             </label>
           </div>
         </div>
@@ -424,7 +582,7 @@ const CustomizationPanel = ({
       {/* Interactions */}
       <div>
         <label className="block text-white font-semibold mb-3 text-sm">
-          🖱️ Interactions
+          🖱️ Chart Interactions
         </label>
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-slate-300 text-sm">
@@ -436,7 +594,7 @@ const CustomizationPanel = ({
               }
               className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
             />
-            Enable zoom and pan
+            Enable zoom and pan (where applicable)
           </label>
           <label className="flex items-center gap-2 text-slate-300 text-sm">
             <input
@@ -458,7 +616,7 @@ const CustomizationPanel = ({
               }
               className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
             />
-            Enable brush selection
+            Enable brush selection (for scatter plots)
           </label>
           <label className="flex items-center gap-2 text-slate-300 text-sm">
             <input
@@ -469,7 +627,7 @@ const CustomizationPanel = ({
               }
               className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
             />
-            Show legend
+            Show legend (where applicable)
           </label>
         </div>
       </div>
@@ -477,7 +635,7 @@ const CustomizationPanel = ({
       {/* Marine Theme Options */}
       <div>
         <label className="block text-white font-semibold mb-3 text-sm">
-          🌊 Marine Theme
+          🌊 Marine Theme Features
         </label>
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-slate-300 text-sm">
@@ -500,7 +658,7 @@ const CustomizationPanel = ({
               }
               className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
             />
-            Animated wave effects
+            Animated wave effects (subtle)
           </label>
           <label className="flex items-center gap-2 text-slate-300 text-sm">
             <input
@@ -511,12 +669,72 @@ const CustomizationPanel = ({
               }
               className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
             />
-            Use marine-themed icons
+            Use marine-themed icons and symbols
+          </label>
+        </div>
+      </div>
+
+      {/* Performance Settings */}
+      <div>
+        <label className="block text-white font-semibold mb-3 text-sm">
+          ⚡ Performance
+        </label>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-slate-400 text-xs mb-1">
+              Animation Duration: {config.animationDuration || 1000}ms
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="3000"
+              step="250"
+              value={config.animationDuration || 1000}
+              onChange={(e) =>
+                handleConfigChange(
+                  "animationDuration",
+                  parseInt(e.target.value)
+                )
+              }
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>No Animation</span>
+              <span>Slow (3s)</span>
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-slate-300 text-sm">
+            <input
+              type="checkbox"
+              checked={config.optimizeForLargeDatasets !== false}
+              onChange={(e) =>
+                handleConfigChange("optimizeForLargeDatasets", e.target.checked)
+              }
+              className="w-4 h-4 text-cyan-400 bg-slate-800 border-slate-600 rounded focus:ring-cyan-400"
+            />
+            Optimize rendering for large datasets
           </label>
         </div>
       </div>
     </div>
   );
+
+  const handleReset = () => {
+    const resetConfig = {
+      title: "",
+      colorScheme: "ocean",
+      width: "800",
+      height: "500",
+      animated: true,
+      enableTooltips: true,
+      enableLegend: true,
+      maxRecords: "1000",
+      bins: 20,
+      animationDuration: 1000,
+    };
+    onConfigChange(resetConfig);
+  };
 
   return (
     <div className="ocean-card dashboard-card">
@@ -561,7 +779,7 @@ const CustomizationPanel = ({
       {/* Reset Button */}
       <div className="mt-6 pt-6 border-t border-slate-700">
         <button
-          onClick={() => onConfigChange({ reset: true })}
+          onClick={handleReset}
           className="w-full ocean-btn-secondary px-4 py-2 rounded-lg text-sm font-medium"
         >
           🔄 Reset to Defaults
