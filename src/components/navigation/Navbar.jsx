@@ -283,30 +283,69 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 sm:h-18">
           {/* Professional Logo Section */}
           <motion.div
-            className={logoContainerClasses}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
+            className={`${logoContainerClasses} group cursor-pointer select-none`}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            transition={{
+              duration: 0.2,
+              ease: "easeInOut",
+            }}
             onClick={() => handleNavigation("/")}
           >
-            <div className="relative">
+            <div className="relative flex items-center gap-3 sm:gap-4">
+              {/* Logo Container */}
               <motion.div
-                className={logoClasses}
-                whileHover={{ rotate: 15, scale: 1.05 }}
-                transition={{ duration: 0.3 }}
+                className={`${logoClasses} relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-2 backdrop-blur-sm border border-cyan-400/20`}
+                whileHover={{
+                  rotate: [0, 5, 0],
+                  scale: 1.02,
+                  borderColor: "rgba(34, 211, 238, 0.4)",
+                }}
+                transition={{
+                  duration: 0.4,
+                  ease: "easeOut",
+                }}
               >
-                <Waves className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-sm" />
+                <img
+                  src="/IMB-Logo.png"
+                  alt="Indo Marine Base Logo"
+                  className="w-6 h-6 sm:w-7 sm:h-7 relative z-10"
+                />
+                {/* Subtle glow effect */}
+                {/* <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" /> */}
               </motion.div>
-            </div>
-            <div className="hidden sm:block">
-              <div className="flex flex-col">
-                <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">
+
+              {/* Brand Text */}
+              <div className="hidden sm:flex flex-col justify-center">
+                <motion.h1
+                  className="text-md sm:text-xl font-bold tracking-tight text-white/95 leading-tight"
+                  whileHover={{ x: 2 }}
+                  transition={{ duration: 0.2 }}
+                >
                   Indo Marine Base
-                </h1>
-                <p className="text-xs font-medium text-cyan-400/90 tracking-wide uppercase">
+                </motion.h1>
+                <motion.p
+                  className="text-xs font-medium text-cyan-300/80 tracking-wider uppercase mt-0.5 leading-none"
+                  initial={{ opacity: 0.7 }}
+                  whileHover={{
+                    opacity: 1,
+                    x: 2,
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
                   Research Platform
-                </p>
+                </motion.p>
               </div>
+            </div>
+
+            {/* Mobile Brand Text */}
+            <div className="sm:hidden">
+              <motion.span
+                className="text-sm font-semibold text-white/95 tracking-tight"
+                whileHover={{ x: 1 }}
+              >
+                IMB
+              </motion.span>
             </div>
           </motion.div>
 
