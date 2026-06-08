@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   Waves, ExternalLink, Building2, FlaskConical,
   AlertCircle, CheckCircle, ArrowLeft, Database,
   Globe, FileText, Dna, TrendingDown, ChevronDown,
-  Play, Radio, Cpu, Shield, ImageIcon,
+  Play, Radio, Cpu, Shield, FolderOpen,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// helper: join class strings (avoids template literals in JSX attrs)
 const cx = (...args) => args.filter(Boolean).join(" ");
 
 const fadeUp = {
@@ -19,7 +20,7 @@ const fadeUp = {
   }),
 };
 
-// ── counter ───────────────────────────────────────────────────────────────────
+// ── Counter ───────────────────────────────────────────────────────────────────
 const Counter = ({ target, suffix = "", prefix = "", duration = 2000 }) => {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -38,141 +39,157 @@ const Counter = ({ target, suffix = "", prefix = "", duration = 2000 }) => {
   return <span ref={ref}>{prefix}{count}{suffix}</span>;
 };
 
-// ── India map ─────────────────────────────────────────────────────────────────
+// ── Turtle Migration Map (react-leaflet) ──────────────────────────────────────
+// Maharashtra coast: Ratnagiri ~16.99°N, 73.31°E
+// Odisha coast: Gahirmatha ~20.75°N, 86.90°E
+// Sea route: hugs the coast south → rounds Kanyakumari → up Bay of Bengal
+const MH = [16.99, 73.31];
+const OD = [20.75, 86.90];
+const SEA_ROUTE = [
+  [16.99, 73.31],
+  [15.50, 73.80],
+  [13.00, 74.50],
+  [10.50, 75.80],
+  [8.30,  77.20],
+  [8.08,  77.55],  // Kanyakumari tip
+  [8.50,  79.00],
+  [10.00, 80.20],
+  [12.50, 80.30],
+  [14.80, 80.20],
+  [17.00, 82.30],
+  [19.00, 85.00],
+  [20.75, 86.90],
+];
+
 const TurtleMap = () => {
-  const [step, setStep] = useState(0);
+  const [routeVisible, setRouteVisible] = useState(false);
+  const [odVisible, setOdVisible]       = useState(false);
   useEffect(() => {
-    const ts = [600, 2000, 3800, 5600];
-    const timers = ts.map((t, i) => setTimeout(() => setStep(i + 1), t));
-    return () => timers.forEach(clearTimeout);
+    const t1 = setTimeout(() => setRouteVisible(true), 800);
+    const t2 = setTimeout(() => setOdVisible(true),    2800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  const indiaPath =
-    "M 95,30 L 170,28 L 195,40 L 210,55 L 295,70 L 310,90 L 308,120 " +
-    "L 300,150 L 295,160 L 285,185 L 280,210 L 290,240 L 285,270 " +
-    "L 270,295 L 255,315 L 240,340 L 220,365 L 200,390 L 185,415 L 175,430 " +
-    "L 165,415 L 150,390 L 130,360 L 110,335 L 90,305 L 75,275 " +
-    "L 65,245 L 60,215 L 58,185 L 62,155 L 65,130 L 68,105 L 72,80 L 80,58 Z";
-
-  const migrationPath =
-    "M 55,198 C 45,240 40,290 50,340 C 58,380 80,415 130,440 " +
-    "C 155,450 175,448 200,438 C 230,425 260,400 278,370 " +
-    "C 295,340 300,290 300,250 C 300,215 298,185 298,163";
-
-  const mhY = 200;
-  const odY = 158;
-
   return (
-    <div className="relative w-full" style={{ maxWidth: 440, margin: "0 auto" }}>
-      <svg viewBox="0 0 400 470" className="w-full"
-        style={{ filter: "drop-shadow(0 0 24px #06b6d418)" }}>
-        <defs>
-          <radialGradient id="seaGrad" cx="50%" cy="70%" r="70%">
-            <stop offset="0%" stopColor="#082f49" />
-            <stop offset="100%" stopColor="#020617" />
-          </radialGradient>
-          <radialGradient id="glowMH" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="glowOD" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f97316" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+    <div className="rounded-2xl overflow-hidden border border-cyan-500/20"
+      style={{ height: 380, position: "relative" }}>
+      <MapContainer
+        center={[14.0, 79.0]}
+        zoom={5}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+        scrollWheelZoom={false}
+        attributionControl={false}
+      >
+        {/* Dark ocean tile from CartoDB dark matter */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution="&copy; OpenStreetMap &copy; CARTO"
+        />
 
-        <rect width="400" height="470" fill="url(#seaGrad)" rx="14" />
-
-        {[80, 150, 220, 300, 370].map((y) => (
-          <motion.line key={y} x1="10" y1={y} x2="390" y2={y}
-            stroke="#0ea5e9" strokeWidth="0.4" opacity="0.08"
-            animate={{ opacity: [0.04, 0.12, 0.04] }}
-            transition={{ duration: 4 + y / 100, repeat: Infinity, delay: y / 200 }} />
-        ))}
-
-        <path d={indiaPath} fill="#1e3a5f" stroke="#3b82f6" strokeWidth="1.2" opacity="0.92" />
-        <path d={indiaPath} fill="none" stroke="#60a5fa" strokeWidth="0.4" opacity="0.15" />
-
-        <text x="22" y="260" fill="#1d4ed8" fontSize="8.5" fontFamily="system-ui"
-          fontStyle="italic" opacity="0.7" transform="rotate(-75 22 260)">Arabian Sea</text>
-        <text x="348" y="240" fill="#1d4ed8" fontSize="8.5" fontFamily="system-ui"
-          fontStyle="italic" opacity="0.7" transform="rotate(75 348 240)">Bay of Bengal</text>
-        <text x="200" y="462" fill="#1d4ed8" fontSize="8" fontFamily="system-ui"
-          fontStyle="italic" opacity="0.6" textAnchor="middle">Indian Ocean</text>
-        <text x="130" y="120" fill="#93c5fd" fontSize="8" fontFamily="system-ui"
-          opacity="0.5" textAnchor="middle">India</text>
-
-        {step >= 1 && (
-          <>
-            <motion.circle cx={57} cy={198} r="16" fill="url(#glowMH)"
-              animate={{ r: [12, 20, 12] }} transition={{ duration: 2, repeat: Infinity }} />
-            <circle cx={57} cy={198} r="5.5" fill="#06b6d4"
-              style={{ filter: "drop-shadow(0 0 8px #06b6d4)" }} />
-            <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-              <rect x="2" y={mhY - 22} width="88" height="32" rx="5"
-                fill="#0c1a2e" stroke="#06b6d4" strokeWidth="0.8" opacity="0.95" />
-              <text x="8" y={mhY - 9} fill="#06b6d4" fontSize="8" fontWeight="700"
-                fontFamily="system-ui">Maharashtra</text>
-              <text x="8" y={mhY + 3} fill="#94a3b8" fontSize="7"
-                fontFamily="system-ui">10,000 eggs / yr</text>
-            </motion.g>
-          </>
+        {/* Migration sea route */}
+        {routeVisible && (
+          <Polyline
+            positions={SEA_ROUTE}
+            pathOptions={{ color: "#f97316", weight: 2.5, dashArray: "8 5", opacity: 0.85 }}
+          />
         )}
 
-        {step >= 2 && (
-          <>
-            <motion.path d={migrationPath}
-              fill="none" stroke="#f97316" strokeWidth="2.2" strokeDasharray="7 4"
-              strokeLinecap="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.9 }}
-              transition={{ duration: 2.2, ease: "easeInOut" }} />
-            <motion.text x="145" y="455" fill="#f59e0b" fontSize="18" fontWeight="900"
-              textAnchor="middle"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: 1.4 }}>?</motion.text>
-          </>
-        )}
+        {/* Maharashtra dot */}
+        <CircleMarker
+          center={MH}
+          radius={9}
+          pathOptions={{ color: "#06b6d4", fillColor: "#06b6d4", fillOpacity: 0.9, weight: 2 }}
+        >
+          <Tooltip permanent direction="left" className="leaflet-dark-tip">
+            <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 11 }}>Maharashtra</span>
+            <br />
+            <span style={{ color: "#94a3b8", fontSize: 10 }}>10,000 eggs / yr</span>
+          </Tooltip>
+        </CircleMarker>
 
-        {step >= 3 && (
-          <>
-            <motion.circle cx={298} cy={163} r="16" fill="url(#glowOD)"
-              animate={{ r: [12, 20, 12] }} transition={{ duration: 2, repeat: Infinity, delay: 0.5 }} />
-            <motion.circle cx={298} cy={163} r="5.5" fill="#f97316"
-              initial={{ scale: 0 }} animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 280 }}
-              style={{ filter: "drop-shadow(0 0 8px #f97316)" }} />
-            <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-              <rect x="308" y={odY - 14} width="82" height="30" rx="5"
-                fill="#0c1a2e" stroke="#f97316" strokeWidth="0.8" opacity="0.95" />
-              <text x="314" y={odY - 2} fill="#f97316" fontSize="8" fontWeight="700"
-                fontFamily="system-ui">Odisha Coast</text>
-              <text x="314" y={odY + 10} fill="#94a3b8" fontSize="7"
-                fontFamily="system-ui">Sudden shift!</text>
-            </motion.g>
-          </>
+        {/* Odisha dot */}
+        {odVisible && (
+          <CircleMarker
+            center={OD}
+            radius={9}
+            pathOptions={{ color: "#f97316", fillColor: "#f97316", fillOpacity: 0.9, weight: 2 }}
+          >
+            <Tooltip permanent direction="right" className="leaflet-dark-tip">
+              <span style={{ color: "#f97316", fontWeight: 700, fontSize: 11 }}>Odisha Coast</span>
+              <br />
+              <span style={{ color: "#94a3b8", fontSize: 10 }}>Sudden shift!</span>
+            </Tooltip>
+          </CircleMarker>
         )}
+      </MapContainer>
 
-        {step >= 4 && (
-          <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
-            <rect x="20" y="332" width="360" height="38" rx="8"
-              fill="#0a1628" stroke="#f59e0b" strokeWidth="0.8" />
-            <text x="200" y="347" textAnchor="middle" fill="#f59e0b"
-              fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">
-              WHY DID THEY MIGRATE? SCIENTISTS HAD NO DATA.
-            </text>
-            <text x="200" y="362" textAnchor="middle" fill="#94a3b8"
-              fontSize="7" fontFamily="system-ui">
-              Climate + pollution + ocean data scattered across 12 platforms
-            </text>
-          </motion.g>
-        )}
-      </svg>
+      {/* Overlay label */}
+      <div style={{
+        position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)",
+        background: "#0a1628dd", border: "1px solid #f59e0b55",
+        borderRadius: 8, padding: "4px 14px", zIndex: 1000, pointerEvents: "none",
+      }}>
+        <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+          Sea route: Arabian Sea  Kanyakumari  Bay of Bengal
+        </p>
+      </div>
     </div>
   );
 };
 
-// ── Data Chaos ────────────────────────────────────────────────────────────────
+// ── Data Fragmentation visual ──────────────────────────────────────────────────
+// Shows all the different file formats researchers deal with — scattered, locked
+const FILE_TYPES = [
+  { ext: ".fac",   label: "CMLRE Proprietary",   x: "5%",  y: "8%",  c: "#ef4444", note: "Locked servers" },
+  { ext: ".fastq", label: "Raw eDNA Reads",       x: "60%", y: "5%",  c: "#a855f7", note: "Hard drives" },
+  { ext: ".nc",    label: "NetCDF Climate",        x: "80%", y: "30%", c: "#3b82f6", note: "NOAA / IMD" },
+  { ext: ".fasta", label: "Reference Sequences",  x: "10%", y: "52%", c: "#06b6d4", note: "SILVA / NCBI" },
+  { ext: ".csv",   label: "Ocean Survey Tables",  x: "55%", y: "58%", c: "#f59e0b", note: "INCOIS / IORA" },
+  { ext: ".mat",   label: "MATLAB Oceanography",  x: "30%", y: "72%", c: "#10b981", note: "CMLRE / NIOT" },
+  { ext: ".json",  label: "API Exports",           x: "72%", y: "74%", c: "#ec4899", note: "Fragmented APIs" },
+  { ext: ".bam",   label: "Aligned Reads",         x: "38%", y: "30%", c: "#f97316", note: "Unprocessed" },
+];
+
+const DataFragmentation = () => (
+  <div className="relative w-full rounded-2xl overflow-hidden border border-red-500/20"
+    style={{ background: "#07080f", height: 280 }}>
+
+    {/* Grid texture */}
+    <div className="absolute inset-0" style={{
+      backgroundImage: "linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px)",
+      backgroundSize: "32px 32px",
+    }} />
+
+    {/* Centre label */}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <motion.div className="text-center"
+        animate={{ opacity: [0.35, 0.75, 0.35] }}
+        transition={{ duration: 3.5, repeat: Infinity }}>
+        <p className="text-red-400 text-sm font-mono font-black tracking-[0.3em]">12 PLATFORMS</p>
+        <p className="text-slate-600 text-xs mt-1">No unified access  No common format</p>
+      </motion.div>
+    </div>
+
+    {/* File chips */}
+    {FILE_TYPES.map((f, i) => (
+      <motion.div key={f.ext}
+        className="absolute"
+        style={{ left: f.x, top: f.y }}
+        animate={{ y: [0, i % 2 === 0 ? -6 : 6, 0], opacity: [0.75, 1, 0.75] }}
+        transition={{ duration: 2.5 + i * 0.35, repeat: Infinity, ease: "easeInOut" }}>
+        <div className="rounded-xl px-3 py-2 border"
+          style={{ background: f.c + "14", borderColor: f.c + "55", minWidth: 100 }}>
+          <p className="font-mono font-black text-sm" style={{ color: f.c }}>{f.ext}</p>
+          <p className="text-slate-400 text-xs leading-tight">{f.label}</p>
+          <p className="text-xs mt-0.5 font-medium" style={{ color: f.c + "aa" }}>{f.note}</p>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+);
+
+// ── Data Chaos (orbiting labels) ──────────────────────────────────────────────
 const DataChaos = () => {
   const sources = [
     { label: "CMLRE",  x: "6%",  y: "12%", c: "#06b6d4" },
@@ -191,7 +208,7 @@ const DataChaos = () => {
         <motion.div animate={{ opacity: [0.25, 0.65, 0.25] }}
           transition={{ duration: 3, repeat: Infinity }} className="text-center">
           <p className="text-red-400 text-sm font-mono font-bold tracking-widest">DATA CHAOS</p>
-          <p className="text-slate-600 text-xs mt-1">12 platforms · no unified access</p>
+          <p className="text-slate-600 text-xs mt-1">12 platforms  no unified access</p>
         </motion.div>
       </div>
       {sources.map((s, i) => (
@@ -260,7 +277,7 @@ const UnifiedHub = () => {
           transition={{ duration: 2.5, repeat: Infinity }} />
         <text x={hcx} y="222" textAnchor="middle" fill="#334155"
           fontSize="8" fontFamily="'Courier New', monospace">
-          All data sources · unified · real-time
+          All data sources  unified  real-time
         </text>
       </svg>
     </div>
@@ -275,7 +292,6 @@ const EDNAScanner = () => {
     return () => clearInterval(t);
   }, []);
   const scanY = (tick * 1.5) % 180;
-
   const results = [
     { label: "Novel Species",   conf: "94.2%", c: "#f97316" },
     { label: "Cnidaria fam.",   conf: "87.6%", c: "#a855f7" },
@@ -284,7 +300,6 @@ const EDNAScanner = () => {
   ];
   const seq = ["A","T","G","C","G","A","T","C","A","G","T","C"];
   const seqColor = { A: "#06b6d4", T: "#ec4899", G: "#10b981", C: "#f59e0b" };
-
   return (
     <div className="w-full rounded-2xl border border-purple-500/30 overflow-hidden"
       style={{ background: "#060a12" }}>
@@ -296,10 +311,7 @@ const EDNAScanner = () => {
             <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
           </linearGradient>
         </defs>
-
-        {/* COL 1: DNA Helix */}
-        <text x="70" y="16" textAnchor="middle" fill="#a855f7"
-          fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">eDNA INPUT</text>
+        <text x="70" y="16" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">eDNA INPUT</text>
         {Array.from({ length: 11 }).map((_, i) => {
           const y = 24 + i * 15;
           const phase = i * 0.7;
@@ -308,112 +320,56 @@ const EDNAScanner = () => {
           return (
             <g key={i}>
               <line x1={x1} y1={y} x2={x2} y2={y} stroke="#1e3a5f" strokeWidth="1" />
-              <circle cx={x1} cy={y} r="3.5" fill="#06b6d4" opacity="0.85"
-                style={{ filter: "drop-shadow(0 0 3px #06b6d4)" }} />
-              <circle cx={x2} cy={y} r="3.5" fill="#a855f7" opacity="0.85"
-                style={{ filter: "drop-shadow(0 0 3px #a855f7)" }} />
+              <circle cx={x1} cy={y} r="3.5" fill="#06b6d4" opacity="0.85" />
+              <circle cx={x2} cy={y} r="3.5" fill="#a855f7" opacity="0.85" />
             </g>
           );
         })}
         <rect x="10" y={scanY + 20} width="120" height="20" fill="url(#scanGrad2)" />
-        <line x1="10" y1={scanY + 30} x2="130" y2={scanY + 30}
-          stroke="#a855f7" strokeWidth="0.8" opacity="0.6" />
-
-        {/* COL 2: Sequence analysis */}
-        <text x="270" y="16" textAnchor="middle" fill="#94a3b8"
-          fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">SEQUENCE ANALYSIS</text>
+        <line x1="10" y1={scanY + 30} x2="130" y2={scanY + 30} stroke="#a855f7" strokeWidth="0.8" opacity="0.6" />
+        <text x="270" y="16" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">SEQUENCE ANALYSIS</text>
         {seq.map((ch, i) => (
-          <text key={i} x={152 + i * 20} y="50"
-            fill={seqColor[ch]} fontSize="13" fontWeight="800"
-            fontFamily="'Courier New', monospace">{ch}</text>
+          <text key={i} x={152 + i * 20} y="50" fill={seqColor[ch]} fontSize="13" fontWeight="800" fontFamily="'Courier New', monospace">{ch}</text>
         ))}
-        <rect x="165" y="60" width="200" height="22" rx="6"
-          fill="#1e1040" stroke="#a855f7" strokeWidth="0.8" />
-        <text x="265" y="75" textAnchor="middle" fill="#a855f7"
-          fontSize="8" fontWeight="700" fontFamily="system-ui">CNN + HDBSCAN Classifier</text>
+        <rect x="165" y="60" width="200" height="22" rx="6" fill="#1e1040" stroke="#a855f7" strokeWidth="0.8" />
+        <text x="265" y="75" textAnchor="middle" fill="#a855f7" fontSize="8" fontWeight="700" fontFamily="system-ui">CNN + HDBSCAN Classifier</text>
         {[0.85, 0.60, 0.92, 0.45, 0.78].map((v, i) => (
           <g key={i}>
-            <rect x={155 + i * 45} y={92} width="36" height={v * 55}
-              rx="3" fill="#a855f7" opacity={0.15 + v * 0.25} />
-            <rect x={155 + i * 45} y={92 + (1 - v) * 55} width="36" height={v * 55}
-              rx="3" fill="#a855f7" opacity={0.6} />
-            <text x={173 + i * 45} y={90} textAnchor="middle"
-              fill="#94a3b8" fontSize="6" fontFamily="system-ui">k{i + 1}</text>
+            <rect x={155 + i * 45} y={92 + (1 - v) * 55} width="36" height={v * 55} rx="3" fill="#a855f7" opacity={0.6} />
+            <text x={173 + i * 45} y={90} textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="system-ui">k{i + 1}</text>
           </g>
         ))}
-        <text x="270" y="165" textAnchor="middle" fill="#64748b"
-          fontSize="7" fontFamily="system-ui">k-mer frequency features</text>
-
-        {/* Arrow */}
-        <motion.line x1="400" y1="100" x2="428" y2="100"
-          stroke="#a855f7" strokeWidth="1.5"
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.2, repeat: Infinity }} />
+        <text x="270" y="165" textAnchor="middle" fill="#64748b" fontSize="7" fontFamily="system-ui">k-mer frequency features</text>
+        <motion.line x1="400" y1="100" x2="428" y2="100" stroke="#a855f7" strokeWidth="1.5"
+          animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.2, repeat: Infinity }} />
         <polygon points="428,96 436,100 428,104" fill="#a855f7" />
-
-        {/* COL 3: Results */}
-        <text x="495" y="16" textAnchor="middle" fill="#10b981"
-          fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">RESULTS</text>
+        <text x="495" y="16" textAnchor="middle" fill="#10b981" fontSize="8" fontWeight="700" fontFamily="'Courier New', monospace">RESULTS</text>
         {results.map((r, i) => (
           <g key={r.label}>
-            <rect x="438" y={24 + i * 42} width="112" height="34" rx="6"
-              fill="#0d1b2e" stroke={r.c} strokeWidth="1" />
-            <circle cx="450" cy={24 + i * 42 + 17} r="4" fill={r.c}
-              style={{ filter: "drop-shadow(0 0 4px " + r.c + ")" }} />
-            <text x="458" y={24 + i * 42 + 13} fill={r.c}
-              fontSize="7.5" fontWeight="700" fontFamily="system-ui">{r.label}</text>
-            <text x="458" y={24 + i * 42 + 25} fill="#94a3b8"
-              fontSize="7" fontFamily="'Courier New', monospace">conf: {r.conf}</text>
+            <rect x="438" y={24 + i * 42} width="112" height="34" rx="6" fill="#0d1b2e" stroke={r.c} strokeWidth="1" />
+            <circle cx="450" cy={24 + i * 42 + 17} r="4" fill={r.c} />
+            <text x="458" y={24 + i * 42 + 13} fill={r.c} fontSize="7.5" fontWeight="700" fontFamily="system-ui">{r.label}</text>
+            <text x="458" y={24 + i * 42 + 25} fill="#94a3b8" fontSize="7" fontFamily="'Courier New', monospace">conf: {r.conf}</text>
           </g>
         ))}
-        <text x="280" y="194" textAnchor="middle" fill="#334155"
-          fontSize="7.5" fontFamily="'Courier New', monospace">
-          Deep-water eDNA · 6000 m depth · Real-time classification
+        <text x="280" y="194" textAnchor="middle" fill="#334155" fontSize="7.5" fontFamily="'Courier New', monospace">
+          Deep-water eDNA  6000 m depth  Real-time classification
         </text>
       </svg>
     </div>
   );
 };
 
-// ── GIF section ───────────────────────────────────────────────────────────────
-const GifSection = ({ gifSrc }) => (
-  <div className="w-full rounded-2xl overflow-hidden border border-cyan-500/20"
-    style={{ background: "#060d1a" }}>
-    {gifSrc ? (
-      <img src={gifSrc} alt="MARCHIN demo" className="w-full h-auto" />
-    ) : (
-      <div className="flex flex-col items-center justify-center gap-4 py-20 px-6">
-        <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center">
-          <ImageIcon className="w-7 h-7 text-slate-500" />
-        </div>
-        <div className="text-center">
-          <p className="text-slate-300 font-bold text-sm mb-1">Demo GIF</p>
-          <p className="text-slate-500 text-xs max-w-xs">
-            Set <code className="text-cyan-400 bg-slate-800 px-1 rounded">DEMO_GIF</code> to your
-            file path, e.g. <code className="text-cyan-400 bg-slate-800 px-1 rounded">/assets/marchin-demo.gif</code>
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: "0s" }} />
-          <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "0.15s" }} />
-          <span className="w-2 h-2 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: "0.3s" }} />
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-// ── comparison data ───────────────────────────────────────────────────────────
+// ── comparison rows ───────────────────────────────────────────────────────────
 const rows = [
-  { label: "Deep-sea coverage",    old: "< 0.3%",       newVal: "Reference-free" },
-  { label: "Novel taxa",           old: "Unassigned",    newVal: "Detected & flagged" },
-  { label: "Analysis time",        old: "6 months",      newVal: "Hours (GPU)" },
-  { label: "Database dependency",  old: "100% required", newVal: "0% required" },
-  { label: "Scalability",          old: "Manual",        newVal: "Cloud auto-scale" },
-  { label: "Feedback loop",        old: "None",          newVal: "Continuous retrain" },
+  { label: "Deep-sea coverage",   old: "< 0.3%",       newVal: "Reference-free" },
+  { label: "Novel taxa",          old: "Unassigned",    newVal: "Detected & flagged" },
+  { label: "Analysis time",       old: "6 months",      newVal: "Hours (GPU)" },
+  { label: "Database dependency", old: "100% required", newVal: "0% required" },
+  { label: "Scalability",         old: "Manual",        newVal: "Cloud auto-scale" },
+  { label: "Feedback loop",       old: "None",          newVal: "Continuous retrain" },
 ];
 
-// ── act wrapper ───────────────────────────────────────────────────────────────
 const ActSection = ({ id, children }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -430,7 +386,6 @@ const Tag = ({ label, color }) => (
   <span className={cx("text-xs font-bold border rounded-full px-3 py-1", color)}>{label}</span>
 );
 
-// ── card sub-components (no interpolated classNames) ──────────────────────────
 const GradIconBox = ({ gradient, children, size = "w-10 h-10" }) => (
   <div className={cx(size, "rounded-xl flex items-center justify-center flex-shrink-0")}
     style={{ background: gradient }}>
@@ -439,56 +394,45 @@ const GradIconBox = ({ gradient, children, size = "w-10 h-10" }) => (
 );
 
 const GRADIENTS = {
-  "purple-indigo":  "linear-gradient(135deg,#a855f7,#4f46e5)",
-  "cyan-blue":      "linear-gradient(135deg,#06b6d4,#2563eb)",
-  "pink-rose":      "linear-gradient(135deg,#ec4899,#f43f5e)",
-  "amber-orange":   "linear-gradient(135deg,#f59e0b,#ea580c)",
-  "emerald-teal":   "linear-gradient(135deg,#10b981,#0d9488)",
-  "blue-indigo":    "linear-gradient(135deg,#3b82f6,#4f46e5)",
-  "cyan-blue2":     "linear-gradient(135deg,#06b6d4,#1d4ed8)",
-  "purple-pink":    "linear-gradient(135deg,#a855f7,#db2777)",
+  "purple-indigo": "linear-gradient(135deg,#a855f7,#4f46e5)",
+  "cyan-blue":     "linear-gradient(135deg,#06b6d4,#2563eb)",
+  "pink-rose":     "linear-gradient(135deg,#ec4899,#f43f5e)",
+  "amber-orange":  "linear-gradient(135deg,#f59e0b,#ea580c)",
+  "emerald-teal":  "linear-gradient(135deg,#10b981,#0d9488)",
+  "blue-indigo":   "linear-gradient(135deg,#3b82f6,#4f46e5)",
+  "purple-pink":   "linear-gradient(135deg,#a855f7,#db2777)",
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
 const ProblemStatement = () => {
   const navigate = useNavigate();
-  const DEMO_GIF = null; // set to "/assets/marchin-demo.gif" once ready
 
   const ednaCards = [
-    { icon: Dna,      title: "Reference-Free CNN",         desc: "K-mer patterns from raw sequences. No SILVA, no PR2.",                    grad: GRADIENTS["purple-indigo"] },
-    { icon: Cpu,      title: "GPU-Accelerated Pipeline",   desc: "Millions of reads in parallel. 6 months to hours.",                       grad: GRADIENTS["cyan-blue"] },
-    { icon: Radio,    title: "Real-Time Novelty Detection",desc: "HDBSCAN + Isolation Forest — new species flagged instantly.",              grad: GRADIENTS["pink-rose"] },
-    { icon: Shield,   title: "Expert Validation Loop",     desc: "Flagged taxa routed to scientists. Confirmed species retrain the model.",   grad: GRADIENTS["amber-orange"] },
-    { icon: Globe,    title: "OBIS / NCBI Integration",    desc: "Validated species auto-submitted to global ocean biodiversity databases.",  grad: GRADIENTS["emerald-teal"] },
-    { icon: FileText, title: "Gen-AI Biodiversity Reports",desc: "Plain-English summaries of every scan — ready for research papers.",       grad: GRADIENTS["blue-indigo"] },
-  ];
-
-  const proofCards = [
-    { no: "01", title: "CNN reads DNA like a fingerprint",         desc: "Convolutional layers detect motifs from k-mer encoded sequences — no alignment needed.",  grad: GRADIENTS["cyan-blue"] },
-    { no: "02", title: "HDBSCAN finds unknown families",           desc: "Density-based clustering groups similar sequences and surfaces novel taxa.",               grad: GRADIENTS["purple-indigo"] },
-    { no: "03", title: "Every validation makes it smarter",        desc: "Confirmed species feed back into training data — accuracy grows with every voyage.",       grad: GRADIENTS["emerald-teal"] },
-    { no: "04", title: "Cloud-native at any scale",                desc: "AWS S3 + Docker + GPU handles petabytes. Scales from one voyage to the entire mission.",   grad: GRADIENTS["amber-orange"] },
-    { no: "05", title: "One dashboard, all ocean data",            desc: "Climate, pollution, currents, eDNA — unified for scientists and policy-makers.",           grad: GRADIENTS["pink-rose"] },
-    { no: "06", title: "274 teams. Zero full solutions before us.",desc: "We built what nobody else could: reference-free, cloud-scale, continuously improving.",    grad: GRADIENTS["blue-indigo"] },
+    { icon: Dna,      title: "Reference-Free CNN",         desc: "K-mer patterns from raw sequences. No SILVA, no PR2.",                   grad: GRADIENTS["purple-indigo"] },
+    { icon: Cpu,      title: "GPU-Accelerated Pipeline",   desc: "Millions of reads in parallel. 6 months to hours.",                      grad: GRADIENTS["cyan-blue"] },
+    { icon: Radio,    title: "Real-Time Novelty Detection",desc: "HDBSCAN + Isolation Forest: new species flagged instantly.",             grad: GRADIENTS["pink-rose"] },
+    { icon: Shield,   title: "Expert Validation Loop",     desc: "Flagged taxa routed to scientists. Confirmed species retrain the model.",  grad: GRADIENTS["amber-orange"] },
+    { icon: Globe,    title: "OBIS / NCBI Integration",    desc: "Validated species auto-submitted to global ocean biodiversity databases.", grad: GRADIENTS["emerald-teal"] },
+    { icon: FileText, title: "Gen-AI Biodiversity Reports",desc: "Plain-English summaries of every scan: ready for research papers.",      grad: GRADIENTS["blue-indigo"] },
   ];
 
   const orgItems = [
-    { icon: Building2,    label: "Organization", value: "Ministry of Earth Sciences (MoES)",                grad: GRADIENTS["cyan-blue"] },
-    { icon: FlaskConical, label: "Department",   value: "Centre for Marine Living Resources & Ecology (CMLRE)", grad: GRADIENTS["blue-indigo"] },
-    { icon: Waves,        label: "Theme",        value: "Deep Ocean Mission · Miscellaneous",               grad: GRADIENTS["purple-pink"] },
+    { icon: Building2,    label: "Organization", value: "Ministry of Earth Sciences (MoES)",                    grad: GRADIENTS["cyan-blue"] },
+    { icon: FlaskConical, label: "Department",   value: "Centre for Marine Living Resources and Ecology (CMLRE)", grad: GRADIENTS["blue-indigo"] },
+    { icon: Waves,        label: "Theme",        value: "Deep Ocean Mission Miscellaneous",                       grad: GRADIENTS["purple-pink"] },
   ];
 
   const datasetLinks = [
-    { name: "NCBI BLAST Database",    url: "https://ftp.ncbi.nlm.nih.gov/blast/db/", desc: "Primary reference nucleotide sequences",          grad: GRADIENTS["cyan-blue"] },
-    { name: "SILVA rRNA Database",    url: "https://www.arb-silva.de/",              desc: "Ribosomal RNA reference (limited deep-sea)",       grad: GRADIENTS["blue-indigo"] },
-    { name: "PR2 Protist Database",   url: "https://pr2-database.org/",              desc: "Eukaryotic 18S rRNA sequences",                   grad: GRADIENTS["purple-pink"] },
-    { name: "OBIS Ocean Biodiversity",url: "https://obis.org/",                      desc: "Target integration for validated results",         grad: GRADIENTS["emerald-teal"] },
+    { name: "NCBI BLAST Database",    url: "https://ftp.ncbi.nlm.nih.gov/blast/db/", desc: "Primary reference nucleotide sequences",        grad: GRADIENTS["cyan-blue"] },
+    { name: "SILVA rRNA Database",    url: "https://www.arb-silva.de/",              desc: "Ribosomal RNA reference (limited deep-sea)",     grad: GRADIENTS["blue-indigo"] },
+    { name: "PR2 Protist Database",   url: "https://pr2-database.org/",              desc: "Eukaryotic 18S rRNA sequences",                 grad: GRADIENTS["purple-pink"] },
+    { name: "OBIS Ocean Biodiversity",url: "https://obis.org/",                      desc: "Target integration for validated results",       grad: GRADIENTS["emerald-teal"] },
   ];
 
   return (
     <div className="min-h-screen text-white" style={{ background: "#030712" }}>
 
-      {/* ACT 1 — HOOK */}
+      {/* ── ACT 1: HOOK ──────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0"
@@ -496,15 +440,9 @@ const ProblemStatement = () => {
           <motion.div className="absolute inset-0"
             animate={{ opacity: [0.025, 0.06, 0.025] }} transition={{ duration: 8, repeat: Infinity }}
             style={{
-              backgroundImage: "linear-gradient(rgba(6,182,212,1) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,1) 1px,transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(6,182,212,0.6) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.6) 1px,transparent 1px)",
               backgroundSize: "60px 60px",
             }} />
-          {Array.from({ length: 16 }).map((_, i) => (
-            <motion.div key={i} className="absolute w-1 h-1 rounded-full bg-cyan-400"
-              style={{ left: (5 + i * 6) + "%", top: (18 + (i % 5) * 15) + "%", opacity: 0.25 }}
-              animate={{ y: [-8, 8, -8], opacity: [0.12, 0.45, 0.12] }}
-              transition={{ duration: 3 + i * 0.4, repeat: Infinity, delay: i * 0.2 }} />
-          ))}
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-20">
@@ -518,8 +456,8 @@ const ProblemStatement = () => {
             className="flex flex-wrap gap-2 mb-8">
             <Tag label="SIH25042"                  color="bg-orange-500/20 text-orange-300 border-orange-500/30" />
             <Tag label="Smart India Hackathon 2025" color="bg-cyan-500/15 text-cyan-300 border-cyan-500/25" />
-            <Tag label="MoES · CMLRE"               color="bg-blue-500/15 text-blue-300 border-blue-500/25" />
-            <Tag label="Deep Ocean Mission"         color="bg-purple-500/15 text-purple-300 border-purple-500/25" />
+            <Tag label="MoES CMLRE"                color="bg-blue-500/15 text-blue-300 border-blue-500/25" />
+            <Tag label="Deep Ocean Mission"        color="bg-purple-500/15 text-purple-300 border-purple-500/25" />
           </motion.div>
 
           <motion.p variants={fadeUp} initial="hidden" animate="visible" custom={1}
@@ -533,13 +471,13 @@ const ProblemStatement = () => {
             </span>
             <br />
             <span style={{ background: "linear-gradient(135deg,#06b6d4,#3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Then — Silence.
+              Then Silence.
             </span>
           </motion.h1>
           <motion.p variants={fadeUp} initial="hidden" animate="visible" custom={3}
             className="text-slate-400 text-lg max-w-3xl leading-relaxed mb-12">
             Every year, the Maharashtra coastline was home to one of India's most significant
-            Olive Ridley nesting grounds. Then one season — they were gone.
+            Olive Ridley nesting grounds. Then one season they were gone.
             Reappearing 1,400 km away on the Odisha coast.
           </motion.p>
 
@@ -548,13 +486,13 @@ const ProblemStatement = () => {
             <div>
               <TurtleMap />
               <p className="text-center text-slate-600 text-xs font-mono mt-2">
-                Route: Arabian Sea — tip of India — Bay of Bengal
+                Actual sea route: Arabian Sea  Kanyakumari  Bay of Bengal
               </p>
             </div>
             <div className="space-y-5 pt-4">
               <div className="border-l-2 border-cyan-500 pl-5">
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Scientists knew something had changed — temperature, currents, pollution.
+                  Scientists knew something had changed: temperature, currents, pollution.
                   But the data was <span className="text-red-400 font-semibold">scattered across 12 platforms</span>,
                   buried in <span className="text-orange-300 font-mono">.fac files</span> nobody could access.
                 </p>
@@ -567,7 +505,7 @@ const ProblemStatement = () => {
               </div>
               <div className="border-l-2 border-purple-500 pl-5">
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  And deeper — literally — thousands of eDNA samples at
+                  And deeper: thousands of eDNA samples at
                   <span className="text-purple-300 font-bold"> 6,000 metres depth</span> sat on hard drives.
                   <span className="text-red-400 font-semibold"> Unanalyzed. Unknown.</span>
                 </p>
@@ -583,18 +521,18 @@ const ProblemStatement = () => {
         </div>
       </section>
 
-      {/* ACT 2 — SCALE */}
+      {/* ── ACT 2: SCALE ─────────────────────────────────────────────────── */}
       <ActSection id="scale">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-orange-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 2 — The Scale</p>
+          <p className="text-orange-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 2 The Scale</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">This Is Not Just About Turtles.</h2>
           <p className="text-slate-400 text-base max-w-2xl mb-12">India's Deep Ocean Mission is collecting data at a scale nobody has the tools to process.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14">
             {[
-              { target: 6000, suffix: "m",      label: "Deepest samples collected",      textC: "text-cyan-300",    borderC: "border-cyan-500/30" },
+              { target: 6000, suffix: "m",     label: "Deepest samples collected",      textC: "text-cyan-300",   borderC: "border-cyan-500/30" },
               { target: 70,   suffix: "%", prefix: "~", label: "Deep-sea species undiscovered", textC: "text-orange-300", borderC: "border-orange-500/30" },
-              { target: 274,  suffix: "",        label: "Teams attempted SIH25042",       textC: "text-purple-300",  borderC: "border-purple-500/30" },
-              { target: 0,    suffix: " tools",  label: "Existing tools for novel eDNA",  textC: "text-red-400",     borderC: "border-red-500/30" },
+              { target: 274,  suffix: "",       label: "Teams attempted SIH25042",       textC: "text-purple-300", borderC: "border-purple-500/30" },
+              { target: 0,    suffix: " tools", label: "Existing tools for novel eDNA",  textC: "text-red-400",    borderC: "border-red-500/30" },
             ].map((s, i) => (
               <div key={i} className={cx("bg-slate-900 border rounded-2xl p-5 text-center", s.borderC)}>
                 <p className={cx("text-3xl sm:text-4xl font-black mb-1", s.textC)}>
@@ -616,19 +554,27 @@ const ProblemStatement = () => {
         </div>
       </ActSection>
 
-      {/* ACT 3 — CHAOS */}
+      {/* ── ACT 3: DATA CHAOS ────────────────────────────────────────────── */}
       <ActSection id="chaos">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-red-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 3 — The Villain</p>
+          <p className="text-red-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 3 The Villain</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">The Data Exists. It's Just Invisible.</h2>
-          <p className="text-slate-400 text-base max-w-2xl mb-10">CMLRE, INCOIS, IORA, IMD, NOAA — each holds a piece. No platform unifies them.</p>
+          <p className="text-slate-400 text-base max-w-2xl mb-6">CMLRE, INCOIS, IORA, IMD, NOAA: each holds a piece. No platform unifies them.</p>
+
+          {/* File Fragmentation */}
+          <div className="mb-6">
+            <p className="text-slate-500 text-xs font-mono font-bold tracking-widest uppercase mb-3">Scattered File Formats Across Agencies</p>
+            <DataFragmentation />
+          </div>
+
           <div className="mb-10"><DataChaos /></div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { icon: TrendingDown, title: "SILVA less than 0.3% deep-sea coverage", desc: "Built for shallow/terrestrial species — deep-sea taxa invisible.",                               textC: "text-red-400",    borderC: "border-red-500/20 bg-red-500/5" },
-              { icon: FileText,     title: "6 months per voyage dataset",             desc: "QIIME2 / DADA2 take months on standard compute for a single voyage.",                           textC: "text-orange-400", borderC: "border-orange-500/20 bg-orange-500/5" },
-              { icon: AlertCircle,  title: "Unassigned is the most common result",    desc: "60-80% of deep-sea reads return unassigned — biodiversity completely missed.",                   textC: "text-yellow-400", borderC: "border-yellow-500/20 bg-yellow-500/5" },
-              { icon: Globe,        title: ".fac files on locked CMLRE servers",      desc: "Proprietary formats, disconnected servers — accessing data requires inter-agency coordination.", textC: "text-purple-400", borderC: "border-purple-500/20 bg-purple-500/5" },
+              { icon: TrendingDown, title: "SILVA less than 0.3% deep-sea coverage", desc: "Built for shallow/terrestrial species: deep-sea taxa invisible.",                              textC: "text-red-400",    borderC: "border-red-500/20 bg-red-500/5" },
+              { icon: FileText,     title: "6 months per voyage dataset",             desc: "QIIME2 and DADA2 take months on standard compute for a single voyage.",                        textC: "text-orange-400", borderC: "border-orange-500/20 bg-orange-500/5" },
+              { icon: AlertCircle,  title: "Unassigned is the most common result",    desc: "60-80% of deep-sea reads return unassigned: biodiversity completely missed.",                  textC: "text-yellow-400", borderC: "border-yellow-500/20 bg-yellow-500/5" },
+              { icon: Globe,        title: ".fac files on locked CMLRE servers",      desc: "Proprietary formats, disconnected servers: accessing data requires inter-agency coordination.",textC: "text-purple-400", borderC: "border-purple-500/20 bg-purple-500/5" },
             ].map((pt, i) => (
               <div key={i} className={cx("border rounded-2xl p-5", pt.borderC)}>
                 <div className="flex items-start gap-4">
@@ -646,10 +592,10 @@ const ProblemStatement = () => {
         </div>
       </ActSection>
 
-      {/* ACT 4 — SOLUTION */}
+      {/* ── ACT 4: SOLUTION ──────────────────────────────────────────────── */}
       <ActSection id="solution">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-emerald-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 4 — The Solution</p>
+          <p className="text-emerald-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 4 The Solution</p>
           <h2 className="text-3xl sm:text-4xl font-black mb-3">
             <span style={{ background: "linear-gradient(135deg,#06b6d4,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               MARCHIN Does Not Look Up Answers.
@@ -657,7 +603,7 @@ const ProblemStatement = () => {
             <br /><span className="text-white">It Learns Them.</span>
           </h2>
           <p className="text-slate-400 text-base max-w-2xl mb-12">
-            One unified platform — all ocean data, plus AI that classifies deep-sea DNA without a reference database.
+            One unified platform: all ocean data, plus AI that classifies deep-sea DNA without a reference database.
           </p>
           <div className="mb-12"><UnifiedHub /></div>
           <div className="rounded-2xl overflow-hidden border border-slate-700/50">
@@ -681,14 +627,14 @@ const ProblemStatement = () => {
         </div>
       </ActSection>
 
-      {/* ACT 5 — eDNA SCANNER */}
+      {/* ── ACT 5: eDNA SCANNER ──────────────────────────────────────────── */}
       <ActSection id="edna-scanner">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-purple-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 5 — Flagship Feature</p>
+          <p className="text-purple-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 5 Flagship Feature</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">The eDNA Deep-Water Scanner</h2>
           <p className="text-slate-400 text-base max-w-2xl mb-10">
             Upload raw <span className="text-purple-300 font-mono">.fastq / .fasta</span> sequences from any depth.
-            MARCHIN classifies, clusters, and flags novel taxa — in hours, not months.
+            MARCHIN classifies, clusters, and flags novel taxa in hours, not months.
           </p>
           <div className="mb-10"><EDNAScanner /></div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -705,37 +651,9 @@ const ProblemStatement = () => {
         </div>
       </ActSection>
 
-      {/* DEMO GIF */}
-      <ActSection id="demo">
+      {/* ── FINAL: ORG + DATASETS + CTA ──────────────────────────────────── */}
+      <ActSection id="refs">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-pink-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Live Demo</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">See MARCHIN in Action</h2>
-          <p className="text-slate-400 text-base max-w-2xl mb-8">
-            Watch the pipeline classify deep-sea eDNA sequences in real time —
-            from raw .fastq upload to biodiversity report.
-          </p>
-          <GifSection gifSrc={DEMO_GIF} />
-        </div>
-      </ActSection>
-
-      {/* ACT 6 — PROOF */}
-      <ActSection id="proof">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <p className="text-cyan-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 6 — Why It Works</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-10">
-            The Feedback Loop That Makes MARCHIN Smarter Every Voyage.
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
-            {proofCards.map((item, i) => (
-              <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-cyan-500/20 transition-all">
-                <GradIconBox gradient={item.grad}>
-                  <span className="text-sm font-extrabold text-white">{item.no}</span>
-                </GradIconBox>
-                <h3 className="font-bold text-white text-sm mt-3 mb-1.5">{item.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
 
           {/* Org bar */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-wrap gap-6 items-center mb-8">
@@ -775,7 +693,7 @@ const ProblemStatement = () => {
             <p className="text-cyan-400 text-xs font-bold tracking-widest font-mono mb-3">READY TO SEE THE SOLUTION?</p>
             <h3 className="text-2xl font-black text-white mb-3">Explore MARCHIN in Full</h3>
             <p className="text-slate-400 text-sm mb-6 max-w-xl mx-auto">
-              System architecture, team, modules, tech stack — everything powering India's first
+              System architecture, team, modules, tech stack: everything powering India's first
               reference-free deep-sea eDNA classification platform.
             </p>
             <button onClick={() => navigate("/project-report")}
