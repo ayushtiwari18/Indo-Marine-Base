@@ -15,8 +15,8 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
+import ProblemStatementBubble from "@/components/ProblemStatementBubble";
 
-// New recommended pages to implement
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Publications from "./pages/Publications";
@@ -31,6 +31,8 @@ import ResearchTools from "./pages/ResearchTools";
 import DataExplorer from "./pages/DataExplorer";
 import DataVisualizationTool from "./components/Visualization/DataVisualizationTool";
 import TableauDashboard from "./pages/TableauDashboard";
+import ProjectReport from "./pages/ProjectReport";
+import ProblemStatement from "./pages/ProblemStatement";
 
 const queryClient = new QueryClient();
 
@@ -41,58 +43,61 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Navbar />
+        {/* Global floating PS bubble — navigates to /problem-statement */}
+        <ProblemStatementBubble />
         <div className="min-h-screen bg-slate-900 pt-20">
           <Routes>
             {/* Landing Page */}
             <Route path="/" element={<Index />} />
 
-            {/* Authentication Routes */}
+            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
 
-            {/* MAIN DASHBOARD (matches architecture) */}
+            {/* Dashboard */}
             <Route path="/dashboard" element={<Home />} />
 
-            {/* DATA EXPLORER SUITE (matches architecture) */}
+            {/* Data Explorer */}
             <Route path="/data-explorer" element={<DataExplorer />} />
             <Route path="/datasets" element={<Datasets />} />
             <Route path="/species-database" element={<SpeciesDatabase />} />
 
-            {/* VISUALIZATION & MAPPING (matches architecture) */}
+            {/* Visualization */}
             <Route path="/visualization" element={<Visualization />} />
-            <Route
-              path="/visualization-tool"
-              element={<DataVisualizationTool />}
-            />
+            <Route path="/visualization-tool" element={<DataVisualizationTool />} />
 
-            {/* AI RESEARCH HUB (matches architecture) */}
+            {/* AI Research Hub */}
             <Route path="/ai-tools" element={<AITools />} />
             <Route path="/research-tools" element={<ResearchTools />} />
 
-            {/* ANALYTICS DASHBOARD (matches architecture) */}
+            {/* Analytics */}
             <Route path="/analytics" element={<TableauDashboard />} />
 
-            {/* COLLABORATION PLATFORM (matches architecture) */}
+            {/* Collaboration */}
             <Route path="/collaborations" element={<Collaborations />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/publications" element={<Publications />} />
 
-            {/* BACKEND API ACCESS (matches architecture) */}
+            {/* Project Report & Problem Statement */}
+            <Route path="/project-report" element={<ProjectReport />} />
+            <Route path="/problem-statement" element={<ProblemStatement />} />
+
+            {/* API */}
             <Route path="/api-access" element={<APIAccess />} />
             <Route path="/documentation" element={<Documentation />} />
 
-            {/* Admin Routes */}
+            {/* Admin */}
             <Route element={<Layout />}>
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Route>
 
-            {/* Information Pages */}
+            {/* Info */}
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/outreach" element={<Outreach />} />
 
-            {/* 404 Route */}
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
