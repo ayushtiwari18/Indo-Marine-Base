@@ -6,7 +6,7 @@ import {
   Waves, ExternalLink, Building2, FlaskConical,
   AlertCircle, CheckCircle, ArrowLeft, Database,
   Globe, FileText, Dna, TrendingDown, ChevronDown,
-  Play, Radio, Cpu, Shield, FolderOpen,
+  Play, Radio, Cpu, Shield, ImageIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -40,9 +40,6 @@ const Counter = ({ target, suffix = "", prefix = "", duration = 2000 }) => {
 };
 
 // ── Turtle Migration Map (react-leaflet) ──────────────────────────────────────
-// Maharashtra coast: Ratnagiri ~16.99°N, 73.31°E
-// Odisha coast: Gahirmatha ~20.75°N, 86.90°E
-// Sea route: hugs the coast south → rounds Kanyakumari → up Bay of Bengal
 const MH = [16.99, 73.31];
 const OD = [20.75, 86.90];
 const SEA_ROUTE = [
@@ -51,7 +48,7 @@ const SEA_ROUTE = [
   [13.00, 74.50],
   [10.50, 75.80],
   [8.30,  77.20],
-  [8.08,  77.55],  // Kanyakumari tip
+  [8.08,  77.55],
   [8.50,  79.00],
   [10.00, 80.20],
   [12.50, 80.30],
@@ -81,21 +78,16 @@ const TurtleMap = () => {
         scrollWheelZoom={false}
         attributionControl={false}
       >
-        {/* Dark ocean tile from CartoDB dark matter */}
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution="&copy; OpenStreetMap &copy; CARTO"
         />
-
-        {/* Migration sea route */}
         {routeVisible && (
           <Polyline
             positions={SEA_ROUTE}
             pathOptions={{ color: "#f97316", weight: 2.5, dashArray: "8 5", opacity: 0.85 }}
           />
         )}
-
-        {/* Maharashtra dot */}
         <CircleMarker
           center={MH}
           radius={9}
@@ -107,8 +99,6 @@ const TurtleMap = () => {
             <span style={{ color: "#94a3b8", fontSize: 10 }}>10,000 eggs / yr</span>
           </Tooltip>
         </CircleMarker>
-
-        {/* Odisha dot */}
         {odVisible && (
           <CircleMarker
             center={OD}
@@ -123,8 +113,6 @@ const TurtleMap = () => {
           </CircleMarker>
         )}
       </MapContainer>
-
-      {/* Overlay label */}
       <div style={{
         position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)",
         background: "#0a1628dd", border: "1px solid #f59e0b55",
@@ -138,8 +126,53 @@ const TurtleMap = () => {
   );
 };
 
+// ── Data GIF ──────────────────────────────────────────────────────────────────
+// Shows a GIF illustrating the data fragmentation problem.
+// Place your GIF at public/assets/marchin-demo.gif
+const DATA_GIF = "/assets/marchin-demo.gif";
+
+const DataGif = () => (
+  <div className="w-full rounded-2xl overflow-hidden border border-red-500/25 mb-8"
+    style={{ background: "#07080f" }}>
+    {DATA_GIF ? (
+      <div className="relative">
+        <img
+          src={DATA_GIF}
+          alt="Data fragmentation across agencies"
+          className="w-full h-auto rounded-2xl"
+          style={{ display: "block", maxHeight: 420, objectFit: "cover" }}
+        />
+        {/* caption bar */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 py-3"
+          style={{ background: "linear-gradient(0deg,#07080fdd 0%,transparent 100%)" }}>
+          <p className="text-slate-400 text-xs font-mono">
+            Data scattered across CMLRE, INCOIS, IORA, IMD, NOAA — 12 platforms, zero unified access
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div className="flex flex-col items-center justify-center gap-4 py-16 px-6">
+        <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+          <ImageIcon className="w-6 h-6 text-slate-500" />
+        </div>
+        <div className="text-center">
+          <p className="text-slate-300 font-bold text-sm mb-1">Data Fragmentation GIF</p>
+          <p className="text-slate-500 text-xs max-w-xs">
+            Drop your GIF at{" "}
+            <code className="text-red-400 bg-slate-800 px-1 rounded">public/assets/marchin-demo.gif</code>
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <span className="w-2 h-2 rounded-full bg-red-400 animate-bounce" style={{ animationDelay: "0s" }} />
+          <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: "0.15s" }} />
+          <span className="w-2 h-2 rounded-full bg-yellow-400 animate-bounce" style={{ animationDelay: "0.3s" }} />
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 // ── Data Fragmentation visual ──────────────────────────────────────────────────
-// Shows all the different file formats researchers deal with — scattered, locked
 const FILE_TYPES = [
   { ext: ".fac",   label: "CMLRE Proprietary",   x: "5%",  y: "8%",  c: "#ef4444", note: "Locked servers" },
   { ext: ".fastq", label: "Raw eDNA Reads",       x: "60%", y: "5%",  c: "#a855f7", note: "Hard drives" },
@@ -154,14 +187,10 @@ const FILE_TYPES = [
 const DataFragmentation = () => (
   <div className="relative w-full rounded-2xl overflow-hidden border border-red-500/20"
     style={{ background: "#07080f", height: 280 }}>
-
-    {/* Grid texture */}
     <div className="absolute inset-0" style={{
       backgroundImage: "linear-gradient(rgba(99,102,241,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.06) 1px,transparent 1px)",
       backgroundSize: "32px 32px",
     }} />
-
-    {/* Centre label */}
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <motion.div className="text-center"
         animate={{ opacity: [0.35, 0.75, 0.35] }}
@@ -170,8 +199,6 @@ const DataFragmentation = () => (
         <p className="text-slate-600 text-xs mt-1">No unified access  No common format</p>
       </motion.div>
     </div>
-
-    {/* File chips */}
     {FILE_TYPES.map((f, i) => (
       <motion.div key={f.ext}
         className="absolute"
@@ -189,7 +216,7 @@ const DataFragmentation = () => (
   </div>
 );
 
-// ── Data Chaos (orbiting labels) ──────────────────────────────────────────────
+// ── Data Chaos ────────────────────────────────────────────────────────────────
 const DataChaos = () => {
   const sources = [
     { label: "CMLRE",  x: "6%",  y: "12%", c: "#06b6d4" },
@@ -559,9 +586,12 @@ const ProblemStatement = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <p className="text-red-400 text-xs font-bold tracking-widest font-mono mb-3 uppercase">Act 3 The Villain</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">The Data Exists. It's Just Invisible.</h2>
-          <p className="text-slate-400 text-base max-w-2xl mb-6">CMLRE, INCOIS, IORA, IMD, NOAA: each holds a piece. No platform unifies them.</p>
+          <p className="text-slate-400 text-base max-w-2xl mb-8">CMLRE, INCOIS, IORA, IMD, NOAA: each holds a piece. No platform unifies them.</p>
 
-          {/* File Fragmentation */}
+          {/* GIF showing data fragmentation chaos */}
+          <DataGif />
+
+          {/* File Fragmentation chips */}
           <div className="mb-6">
             <p className="text-slate-500 text-xs font-mono font-bold tracking-widest uppercase mb-3">Scattered File Formats Across Agencies</p>
             <DataFragmentation />
