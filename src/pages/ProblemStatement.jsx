@@ -452,7 +452,7 @@ const GRADIENTS = {
 // ══════════════════════════════════════════════════════════════════════════════
 const ProblemStatement = () => {
   const navigate = useNavigate();
-  const DEMO_GIF = null; // set to "/assets/marchin-demo.gif" once ready
+  const DEMO_GIF = "/assets/marchin-demo.gif"; // set to "/assets/marchin-demo.gif" once ready
 
   const ednaCards = [
     { icon: Dna,      title: "Reference-Free CNN",         desc: "K-mer patterns from raw sequences. No SILVA, no PR2.",                    grad: GRADIENTS["purple-indigo"] },
