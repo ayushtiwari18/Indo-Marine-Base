@@ -25,6 +25,7 @@ import {
   Map,
   Microscope,
   Cpu,
+  Award,
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -37,7 +38,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Memoized navigation items with improved professional naming
   const navigationItems = React.useMemo(
     () => [
       {
@@ -134,6 +134,12 @@ const Navbar = () => {
             icon: Users,
             description: "Collaborate with teams",
           },
+          {
+            name: "Project Report",
+            href: "/project-report",
+            icon: Award,
+            description: "SIH25042 — MARCHIN project report",
+          },
         ],
       },
       {
@@ -158,7 +164,6 @@ const Navbar = () => {
     []
   );
 
-  // Optimized scroll handler
   const handleScroll = useCallback(() => {
     const scrolled = window.scrollY > 50;
     if (scrolled !== isScrolled) {
@@ -171,7 +176,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  // Close mobile menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024 && isOpen) {
@@ -179,12 +183,10 @@ const Navbar = () => {
         setActiveDropdown(null);
       }
     };
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen]);
 
-  // GSAP Animation
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
@@ -193,18 +195,15 @@ const Navbar = () => {
         { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
       );
     }, navRef);
-
     return () => ctx.revert();
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
         setActiveDropdown(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -223,15 +222,12 @@ const Navbar = () => {
   );
 
   const isActiveRoute = useCallback(
-    (href) => {
-      return location.pathname === href;
-    },
+    (href) => location.pathname === href,
     [location.pathname]
   );
 
-  // Professional CSS Classes
   const navbarClasses = `
-    fixed top-0 left-0 right-0 z-[9999] 
+    fixed top-0 left-0 right-0 z-[9999]
     transition-all duration-500 ease-out
     ${
       isScrolled
@@ -240,36 +236,24 @@ const Navbar = () => {
     }
   `;
 
-  const logoContainerClasses =
-    "flex items-center space-x-3 cursor-pointer group";
-
-  const logoClasses = `
-    w-11 h-11 sm:w-12 sm:h-12 
-    rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700
-    flex items-center justify-center shadow-lg
-    group-hover:shadow-cyan-500/30 transition-all duration-300
-    border border-cyan-400/20
+  const dropdownClasses = `
+    absolute top-full left-0 mt-3
+    w-72 sm:w-80
+    bg-slate-800 backdrop-blur-xl
+    rounded-2xl border border-cyan-500/30
+    shadow-2xl shadow-black/20
+    overflow-hidden z-[10000]
+    ring-1 ring-slate-600/80
   `;
 
-  // Update the dropdownClasses with better opacity and contrast
-  const dropdownClasses = `
-  absolute top-full left-0 mt-3 
-  w-72 sm:w-80
-  bg-slate-800 backdrop-blur-xl 
-  rounded-2xl border border-cyan-500/30 
-  shadow-2xl shadow-black/20
-  overflow-hidden z-[10000]
-  ring-1 ring-slate-600/80
-`;
-
   const mobileMenuClasses = `
-  lg:hidden bg-slate-800 backdrop-blur-xl 
-  rounded-2xl mt-4 mb-4 mx-4 
-  border border-cyan-500/30 
-  shadow-2xl shadow-black/20
-  overflow-hidden
-  ring-1 ring-slate-600/80
-`;
+    lg:hidden bg-slate-800 backdrop-blur-xl
+    rounded-2xl mt-4 mb-4 mx-4
+    border border-cyan-500/30
+    shadow-2xl shadow-black/20
+    overflow-hidden
+    ring-1 ring-slate-600/80
+  `;
 
   return (
     <motion.nav
@@ -281,75 +265,37 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-18">
-          {/* Professional Logo Section */}
+          {/* Logo */}
           <motion.div
-            className={`${logoContainerClasses} group cursor-pointer select-none`}
+            className="flex items-center space-x-3 cursor-pointer group select-none"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            transition={{
-              duration: 0.2,
-              ease: "easeInOut",
-            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
             onClick={() => handleNavigation("/")}
           >
             <div className="relative flex items-center gap-3 sm:gap-4">
-              {/* Logo Container */}
               <motion.div
-                className={`${logoClasses} relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-2 backdrop-blur-sm border border-cyan-400/20`}
-                whileHover={{
-                  rotate: [0, 5, 0],
-                  scale: 1.02,
-                  borderColor: "rgba(34, 211, 238, 0.4)",
-                }}
-                transition={{
-                  duration: 0.4,
-                  ease: "easeOut",
-                }}
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-2 backdrop-blur-sm border border-cyan-400/20 flex items-center justify-center"
+                whileHover={{ rotate: [0, 5, 0], scale: 1.02, borderColor: "rgba(34, 211, 238, 0.4)" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                <img
-                  src="/IMB-Logo.png"
-                  alt="Indo Marine Base Logo"
-                  className="w-6 h-6 sm:w-7 sm:h-7 relative z-10"
-                />
-                {/* Subtle glow effect */}
-                {/* <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" /> */}
+                <img src="/IMB-Logo.png" alt="Indo Marine Base Logo" className="w-6 h-6 sm:w-7 sm:h-7 relative z-10" />
               </motion.div>
-
-              {/* Brand Text */}
               <div className="hidden sm:flex flex-col justify-center">
-                <motion.h1
-                  className="text-md sm:text-xl font-bold tracking-tight text-white/95 leading-tight"
-                  whileHover={{ x: 2 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.h1 className="text-md sm:text-xl font-bold tracking-tight text-white/95 leading-tight" whileHover={{ x: 2 }} transition={{ duration: 0.2 }}>
                   Indo Marine Base
                 </motion.h1>
-                <motion.p
-                  className="text-xs font-medium text-cyan-300/80 tracking-wider uppercase mt-0.5 leading-none"
-                  initial={{ opacity: 0.7 }}
-                  whileHover={{
-                    opacity: 1,
-                    x: 2,
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.p className="text-xs font-medium text-cyan-300/80 tracking-wider uppercase mt-0.5 leading-none" initial={{ opacity: 0.7 }} whileHover={{ opacity: 1, x: 2 }} transition={{ duration: 0.2 }}>
                   Research Platform
                 </motion.p>
               </div>
             </div>
-
-            {/* Mobile Brand Text */}
             <div className="sm:hidden">
-              <motion.span
-                className="text-sm font-semibold text-white/95 tracking-tight"
-                whileHover={{ x: 1 }}
-              >
-                IMB
-              </motion.span>
+              <motion.span className="text-sm font-semibold text-white/95 tracking-tight" whileHover={{ x: 1 }}>IMB</motion.span>
             </div>
           </motion.div>
 
-          {/* Professional Desktop Navigation */}
+          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
             {navigationItems.map((item, index) => (
               <div key={item.name} className="relative group">
@@ -361,13 +307,8 @@ const Navbar = () => {
                       onClick={() => toggleDropdown(index)}
                     >
                       <span className="font-semibold">{item.name}</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeDropdown === index ? "rotate-180" : ""
-                        }`}
-                      />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === index ? "rotate-180" : ""}`} />
                     </button>
-
                     <AnimatePresence>
                       {activeDropdown === index && (
                         <motion.div
@@ -380,12 +321,8 @@ const Navbar = () => {
                         >
                           <div className="p-2">
                             <div className="px-4 py-3 border-b border-slate-600/60 bg-slate-750/50">
-                              <h3 className="text-sm font-semibold text-white tracking-wide">
-                                {item.name}
-                              </h3>
-                              <p className="text-xs text-slate-300 mt-0.5">
-                                {item.description}
-                              </p>
+                              <h3 className="text-sm font-semibold text-white tracking-wide">{item.name}</h3>
+                              <p className="text-xs text-slate-300 mt-0.5">{item.description}</p>
                             </div>
                             <div className="py-2 bg-slate-800">
                               {item.items.map((subItem, subIndex) => (
@@ -393,14 +330,14 @@ const Navbar = () => {
                                   key={subItem.name}
                                   onClick={() => handleNavigation(subItem.href)}
                                   className={`
-            flex items-start space-x-3 px-4 py-3 w-full text-left rounded-lg mx-1
-            transition-all duration-200 group
-            ${
-              isActiveRoute(subItem.href)
-                ? "text-cyan-300 bg-cyan-600/20 border border-cyan-500/30"
-                : "text-slate-100 hover:text-white hover:bg-slate-700/60"
-            }
-          `}
+                                    flex items-start space-x-3 px-4 py-3 w-full text-left rounded-lg mx-1
+                                    transition-all duration-200 group
+                                    ${
+                                      isActiveRoute(subItem.href)
+                                        ? "text-cyan-300 bg-cyan-600/20 border border-cyan-500/30"
+                                        : "text-slate-100 hover:text-white hover:bg-slate-700/60"
+                                    }
+                                  `}
                                   whileHover={{ x: 2 }}
                                   initial={{ opacity: 0, x: -10 }}
                                   animate={{ opacity: 1, x: 0 }}
@@ -408,12 +345,8 @@ const Navbar = () => {
                                 >
                                   <subItem.icon className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
                                   <div className="flex-1">
-                                    <div className="font-medium text-sm">
-                                      {subItem.name}
-                                    </div>
-                                    <div className="text-xs text-slate-300 mt-0.5">
-                                      {subItem.description}
-                                    </div>
+                                    <div className="font-medium text-sm">{subItem.name}</div>
+                                    <div className="text-xs text-slate-300 mt-0.5">{subItem.description}</div>
                                   </div>
                                 </motion.button>
                               ))}
@@ -436,24 +369,14 @@ const Navbar = () => {
                     `}
                   >
                     {item.name}
-                    <span
-                      className={`
-                        absolute -bottom-0.5 left-4 right-4 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 
-                        transition-all duration-300 rounded-full
-                        ${
-                          isActiveRoute(item.href)
-                            ? "opacity-100 scale-x-100"
-                            : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
-                        }
-                      `}
-                    />
+                    <span className={`absolute -bottom-0.5 left-4 right-4 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-300 rounded-full ${isActiveRoute(item.href) ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"}`} />
                   </button>
                 )}
               </div>
             ))}
           </div>
 
-          {/* Professional Desktop Auth Buttons */}
+          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             <Button
               variant="ghost"
@@ -492,7 +415,6 @@ const Navbar = () => {
             >
               <LogIn className="w-5 h-5" />
             </Button>
-
             <motion.button
               className="p-2 h-10 w-10 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
               onClick={() => setIsOpen(!isOpen)}
@@ -501,23 +423,11 @@ const Navbar = () => {
             >
               <AnimatePresence mode="wait">
                 {isOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90 }}
-                    animate={{ rotate: 0 }}
-                    exit={{ rotate: 90 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  <motion.div key="close" initial={{ rotate: -90 }} animate={{ rotate: 0 }} exit={{ rotate: 90 }} transition={{ duration: 0.2 }}>
                     <X className="w-6 h-6" />
                   </motion.div>
                 ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90 }}
-                    animate={{ rotate: 0 }}
-                    exit={{ rotate: -90 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  <motion.div key="menu" initial={{ rotate: 90 }} animate={{ rotate: 0 }} exit={{ rotate: -90 }} transition={{ duration: 0.2 }}>
                     <Menu className="w-6 h-6" />
                   </motion.div>
                 )}
@@ -526,7 +436,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Professional Mobile Navigation */}
+        {/* Mobile Menu */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -551,13 +461,8 @@ const Navbar = () => {
                           className="flex items-center justify-between w-full text-left text-slate-200 hover:text-white hover:bg-slate-700/30 transition-all duration-200 py-3 px-3 rounded-lg font-medium"
                         >
                           <span className="font-semibold">{item.name}</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform duration-200 ${
-                              activeDropdown === index ? "rotate-180" : ""
-                            }`}
-                          />
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === index ? "rotate-180" : ""}`} />
                         </button>
-
                         <AnimatePresence>
                           {activeDropdown === index && (
                             <motion.div
@@ -586,9 +491,7 @@ const Navbar = () => {
                                 >
                                   <subItem.icon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                                   <div className="flex-1">
-                                    <div className="font-medium text-sm">
-                                      {subItem.name}
-                                    </div>
+                                    <div className="font-medium text-sm">{subItem.name}</div>
                                   </div>
                                 </motion.button>
                               ))}
@@ -609,16 +512,14 @@ const Navbar = () => {
                           }
                         `}
                       >
-                        {item.icon && (
-                          <item.icon className="w-4 h-4 text-cyan-400" />
-                        )}
+                        {item.icon && <item.icon className="w-4 h-4 text-cyan-400" />}
                         <span className="font-semibold">{item.name}</span>
                       </button>
                     )}
                   </motion.div>
                 ))}
 
-                {/* Professional Mobile Auth Buttons */}
+                {/* Mobile Auth */}
                 <motion.div
                   className="pt-4 space-y-2 border-t border-slate-700/50"
                   initial={{ opacity: 0 }}

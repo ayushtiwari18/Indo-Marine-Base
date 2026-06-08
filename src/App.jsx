@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
+import ProblemStatementBubble from "@/components/ProblemStatementBubble";
 
 // New recommended pages to implement
 import About from "./pages/About";
@@ -31,6 +32,7 @@ import ResearchTools from "./pages/ResearchTools";
 import DataExplorer from "./pages/DataExplorer";
 import DataVisualizationTool from "./components/Visualization/DataVisualizationTool";
 import TableauDashboard from "./pages/TableauDashboard";
+import ProjectReport from "./pages/ProjectReport";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Navbar />
+        {/* Global floating Problem Statement bubble — visible on every page */}
+        <ProblemStatementBubble />
         <div className="min-h-screen bg-slate-900 pt-20">
           <Routes>
             {/* Landing Page */}
@@ -77,6 +81,9 @@ const App = () => (
             <Route path="/collaborations" element={<Collaborations />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/publications" element={<Publications />} />
+
+            {/* PROJECT REPORT PAGE */}
+            <Route path="/project-report" element={<ProjectReport />} />
 
             {/* BACKEND API ACCESS (matches architecture) */}
             <Route path="/api-access" element={<APIAccess />} />
